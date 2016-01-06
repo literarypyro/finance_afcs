@@ -149,7 +149,7 @@ require("logbook header.php");
 <tr id='menuHeader'>
 
 <td>
-Cash Logbook | <a href='sj_ticket_logbook.php'>SJ Logbook</a> | <a href='sv_ticket_logbook.php'>SV Logbook</a> | <a href='#' onclick='window.open("dsr_cash.php","_blank")'>Detailed Sales Report</a>
+Cash Logbook | <a href='merged_logbook.php'>SJ/SV Logbook</a> | <a href='javascript:void(0)' onclick='window.open("dsr_cash.php","_blank")'>Detailed Sales Report</a>
 </td>
 <td align=right >
 <a id='logout' href='logout.php'>Log Out</a>
@@ -159,39 +159,25 @@ Cash Logbook | <a href='sj_ticket_logbook.php'>SJ Logbook</a> | <a href='sv_tick
 <br>
 <table width=100% class='logbookTable'>
 <tr>
-	<th colspan=3>Particulars</th><th colspan=4>Cash In</th><td class='subheader' rowspan=3>Short<br> (Overage)</td><th colspan=4>Cash Out</th><th colspan=4>Balance</th><td  class='subheader'  rowspan=3>Remarks</td>
+	<th colspan=3>Particulars</th><th colspan=3>Cash In</th><td class='subheader' rowspan=2>Short<br> (Overage)</td><th colspan=3>Cash Out</th><th colspan=3>Balance</th><td  class='subheader'  rowspan=2>Remarks</td>
 </tr>
 <tr class='subheader'>
-	<td rowspan=2>Time</td>
-	<td rowspan=2>Name</td>
-	<td  rowspan=2 align=center>Id No.</td>
+	<td>Time</td>
+	<td>Name</td>
+	<td align=center>Id No.</td>
 	
-	<td rowspan=2 align=right>Revolving Fund</td>
-	<td  colspan=2 align=right>For Deposit/<br>Net Revenue</td>
-	<td  rowspan=2 align=center>Total</td>
+	<td align=right>Revolving Fund</td>
+	<td align=right>For Deposit/<br>Net Revenue</td>
+	<td align=center>Total</td>
 
-	<td  rowspan=2 align=right>Revolving Fund</td>
-	<td colspan=2 align=right>PNB Deposit</td>
-	<td  rowspan=2 align=right>Total</td>
+	<td align=right>Revolving Fund</td>
+	<td align=right>PNB Deposit</td>
+	<td align=right>Total</td>
 
-	<td  rowspan=2 align=center>Revolving<br> Fund</td>
-	<td colspan=2 align=right>For Deposit</td>
-	<td  rowspan=2 align=center>Total</td>
+	<td align=right>Revolving Fund</td>
+	<td align=right>For Deposit</td>
+	<td align=center>Total</td>
 </tr>
-
-<tr>
-	<td align=right>SJT</td>
-	<td align=right>SVC</td>
-
-	<td align=right>SJT</td>
-	<td align=right>SVC</td>
-
-	<td align=right>SJT</td>
-	<td align=right>SVC</td>
-
-</tr>
-
-
 <?php
 $station=$_SESSION['station'];
 
@@ -203,8 +189,8 @@ $nm=$rs->num_rows;
 if($nm>0){
 $row=$rs->fetch_assoc();
 	$revolvingTotal=$row['revolving_fund'];
-	$depositTotal=$row['for_deposit'];
-	$grandTotal=($row['for_deposit']*1)+($row['revolving_fund']*1);
+	$depositTotal=$row['sjt_net_revenue']+$row['svc_net_revenue'];
+	$grandTotal=($row['sjt_net_revenue']*1)+($row['svc_net_revenue']*1)+($row['revolving_fund']*1);
 }
 else {
 
@@ -212,34 +198,30 @@ $alternate="SELECT * FROM beginning_balance_cash inner join logbook on beginning
 $rs2=$db->query($alternate);
 $row=$rs2->fetch_assoc();
 	$revolvingTotal=$row['revolving_fund'];
-	$depositTotal=$row['for_deposit'];
-	$grandTotal=($row['for_deposit']*1)+($row['revolving_fund']*1);
+	$depositTotal=$row['sjt_net_revenue']+$row['svc_net_revenue'];
+	$grandTotal=($row['sjt_net_revenue']*1)+($row['revolving_fund']*1);
 	
-	$insert="insert into beginning_balance_cash(log_id,revolving_fund,for_deposit) values ('".$log_id."','".$revolvingTotal."','".$depositTotal."')";
+	$insert="insert into beginning_balance_cash(log_id,revolving_fund,sjt_net_revenue) values ('".$log_id."','".$revolvingTotal."','".$depositTotal."')";
 	$insertRS=$db->query($insert);	
 
 }	
 ?>
 <tr>
-	<td colspan=3>Beginning Balance <a href='#' style='text-decoration:none' onclick='window.open("beginning data entry.php?loID=<?php echo $log_id; ?>&type=cash","beginning","height=300, width=300")' >[Data Entry]</a></td>
+	<td colspan=3>Beginning Balance <a href='javascript:void(0)' style='text-decoration:none' onclick='window.open("beginning data entry.php?loID=<?php echo $log_id; ?>&type=cash","beginning","height=300, width=300")' >[Data Entry]</a></td>
 
 	<td>&nbsp;</td>
 	<td>&nbsp;</td>
 	<td>&nbsp;</td>
-	<td>&nbsp;</td>
 
 	<td>&nbsp;</td>
 
-	<td>&nbsp;</td>
 	<td>&nbsp;</td>
 	<td>&nbsp;</td>
 	<td>&nbsp;</td>
 
 	<td align=right><?php echo number_format($row['revolving_fund']*1,2); ?></td>
-	<td align=right><?php echo number_format($row['sjt_net_revenue']*1,2); ?></td>
-	<td align=right><?php echo number_format($row['svc_net_revenue']*1,2); ?></td>
-
-	<td align=right><?php echo number_format(($row['sjt_net_revenue']*1)+($row['svc_net_revenue']*1)+($row['revolving_fund']*1),2); ?></td>
+	<td align=right><?php echo number_format($row['sjt_net_revenue']*1+$row['svc_net_revenue'],2); ?></td>
+	<td align=right><?php echo number_format(($row['sjt_net_revenue']*1)+($row['revolving_fund']*1),2); ?></td>
 	<td>&nbsp;</td>
 
 </tr>
@@ -287,10 +269,6 @@ for($i=0;$i<$nm;$i++){
 		
 		$cashRow=$cashRS->fetch_assoc();	
 		$deposit_type=$cashRow['type'];
-		$account_type=$cashRow['account_type'];
-
-
-
 		
 	}
 	else {
@@ -325,16 +303,12 @@ for($i=0;$i<$nm;$i++){
 				$cash_asst=$cash_assistantRow['lastName'].", ".$cash_assistantRow['firstName'];
 				
 				
-				$ticketSellerSQL="select * from ticket_seller where id='".$cashRow['ticket_seller']."'";		
-
+				$ticketSellerSQL="select * from ticket_seller where id='".trim($cashRow['ticket_seller'])."'";		
 				$ticketRS=$db->query($ticketSellerSQL);
 				$ticketRow=$ticketRS->fetch_assoc();
 				
 				$revolving=$cashRow['total'];
-
-				$sjt_net_revenue=$cashRow['sjt_net_revenue'];
-
-				$svc_net_revenue=$cashRow['svc_net_revenue'];
+				$deposit=$cashRow['sjt_net_revenue'];
 				$total=$revolving*1+$deposit*1;
 			}
 
@@ -381,15 +355,13 @@ for($i=0;$i<$nm;$i++){
 			
 			$cashStation=$cashRow['station'];	
 			
-			$ticketSellerSQL="select * from ticket_seller where id='".$cashRow['ticket_seller']."'";		
+			$ticketSellerSQL="select * from ticket_seller where id='".trim($cashRow['ticket_seller'])."'";		
 
 			$ticketRS=$db->query($ticketSellerSQL);
 			$ticketRow=$ticketRS->fetch_assoc();
 			
 			$revolving=$cashRow['total'];
-			$sjt_net_revenue=$cashRow['sjt_net_revenue'];
-			$svc_net_revenue=$cashRow['svc_net_revenue'];
-
+			$deposit=$cashRow['sjt_net_revenue'];
 			$total=$revolving*1+$deposit*1;
 		
 		}
@@ -428,7 +400,7 @@ for($i=0;$i<$nm;$i++){
 	<td>
 	<?php 
 	if($type=="deposit")
-	{ echo "<a href='#' style='text-decoration:none' onclick='window.open(\"pnb_deposit.php?tID=".$edit_id."\",\"deposit\",\"height=550, width=500, scrollbars=yes\")'>PNB Deposit - ".strtoupper($deposit_type)."</a>"; 
+	{ echo "<a href='javascript:void(0)' style='text-decoration:none' onclick='window.open(\"pnb_deposit.php?tID=".$edit_id."\",\"deposit\",\"height=550, width=500, scrollbars=yes\")'>PNB Deposit - ".strtoupper($deposit_type)."</a>"; 
 
 
 	} 
@@ -436,7 +408,7 @@ for($i=0;$i<$nm;$i++){
 		if($log_type=="cash"){
 			if($cashStation=="annex"){
 				if($_SESSION['viewMode']=="login"){
-					echo "<a href='#' style='text-decoration:none' onclick='window.open(\"cash_transfer.php?tID=".$edit_id."\",\"transfer\",\"height=800, width=500, scrollbars=yes\")'>ANNEX</a>"; 
+					echo "<a href='javascript:void(0)' style='text-decoration:none' onclick='window.open(\"cash_transfer.php?tID=".$edit_id."\",\"transfer\",\"height=800, width=500, scrollbars=yes\")'>ANNEX</a>"; 
 				}
 				else {
 					echo "ANNEX";
@@ -445,7 +417,7 @@ for($i=0;$i<$nm;$i++){
 			}
 			else {
 				if($_SESSION['viewMode']=="login"){
-					echo "<a href='#' style='text-decoration:none' onclick='window.open(\"cash_transfer.php?tID=".$edit_id."\",\"transfer\",\"height=800, width=500, scrollbars=yes\")'>".strtoupper($ticketRow['last_name']).", ".$ticketRow['first_name'].$suffix."</a>"; 
+					echo "<a href='javascript:void(0)' style='text-decoration:none' onclick='window.open(\"cash_transfer.php?tID=".$edit_id."\",\"transfer\",\"height=800, width=500, scrollbars=yes\")'>".strtoupper($ticketRow['last_name']).", ".$ticketRow['first_name'].$suffix."</a>"; 
 				}
 				else {
 					echo strtoupper($ticketRow['last_name']).", ".$ticketRow['first_name'].$suffix;	
@@ -454,7 +426,7 @@ for($i=0;$i<$nm;$i++){
 		}
 		else if($log_type=="shortage"){
 			if($_SESSION['viewMode']=="login"){
-				echo "<a href='#' style='text-decoration:none' onclick='window.open(\"cash_transfer.php?tID=".$edit_id."\",\"transfer\",\"height=800, width=500, scrollbars=yes\")'>".strtoupper($ticketRow['last_name']).", ".$ticketRow['first_name'].$suffix." - Payment for Shortage</a>"; 		
+				echo "<a href='javascript:void(0)' style='text-decoration:none' onclick='window.open(\"cash_transfer.php?tID=".$edit_id."\",\"transfer\",\"height=800, width=500, scrollbars=yes\")'>".strtoupper($ticketRow['last_name']).", ".$ticketRow['first_name'].$suffix." - Payment for Shortage</a>"; 		
 			}
 			else {
 				echo strtoupper($ticketRow['last_name']).", ".$ticketRow['first_name'].$suffix." - Payment for Shortage";
@@ -464,7 +436,7 @@ for($i=0;$i<$nm;$i++){
 	else if($type=="allocation"){ 
 		if($cashStation=="annex"){
 			if($_SESSION['viewMode']=="login"){
-				echo "<a href='#' style='text-decoration:none' onclick='window.open(\"cash_transfer.php?tID=".$edit_id."\",\"transfer\",\"height=800, width=500, scrollbars=yes\")'>ANNEX</a>";  
+				echo "<a href='javascript:void(0)' style='text-decoration:none' onclick='window.open(\"cash_transfer.php?tID=".$edit_id."\",\"transfer\",\"height=800, width=500, scrollbars=yes\")'>ANNEX</a>";  
 			}
 			else {
 				echo "ANNEX";
@@ -472,7 +444,7 @@ for($i=0;$i<$nm;$i++){
 		}
 		else {
 			if($_SESSION['viewMode']=="login"){
-				echo "<a href='#' style='text-decoration:none' onclick='window.open(\"cash_transfer.php?tID=".$edit_id."\",\"transfer\",\"height=800, width=500, scrollbars=yes\")'>".strtoupper($ticketRow['last_name']).", ".$ticketRow['first_name'].$suffix."</a>";  
+				echo "<a href='javascript:void(0)' style='text-decoration:none' onclick='window.open(\"cash_transfer.php?tID=".$edit_id."\",\"transfer\",\"height=800, width=500, scrollbars=yes\")'>".strtoupper($ticketRow['last_name']).", ".$ticketRow['first_name'].$suffix."</a>";  
 			}
 			else {
 				echo strtoupper($ticketRow['last_name']).", ".$ticketRow['first_name'].$suffix;
@@ -516,10 +488,7 @@ for($i=0;$i<$nm;$i++){
 	if($type=="remittance"){
 	?>
 		<td align=right><?php echo number_format($revolving*1,2); ?></td>
-		<td align=right><?php echo number_format($sjt_net_revenue*1,2); ?></td>
-
-		<td align=right><?php echo number_format($svc_net_revenue*1,2); ?></td>
-
+		<td align=right><?php echo number_format($deposit*1,2); ?></td>
 		<td align=right><?php echo number_format($total*1,2); ?></td>
 	
 	
@@ -555,8 +524,6 @@ for($i=0;$i<$nm;$i++){
 		<td>&nbsp;</td>
 		<td>&nbsp;</td>
 
-		<td>&nbsp;</td>
-
 	<?php
 	}
 	?>
@@ -566,8 +533,6 @@ for($i=0;$i<$nm;$i++){
 	?>
 		<td align=right><?php echo number_format($revolving*1,2); ?></td>
 		<td>&nbsp;</td>
-		<td>&nbsp;</td>
-
 		<td align=right><?php echo number_format($revolving*1,2); ?></td>
 	
 
@@ -580,26 +545,8 @@ for($i=0;$i<$nm;$i++){
 		<td>&nbsp;</td>
 		<?php
 		if($type=="deposit"){
-		
-			if($account_type=="sjt"){
 		?>		
 			<td align=right><?php echo number_format($cashRow['amount']*1,2); ?></td>
-			<td>&nbsp;</td>
-
-
-		<?php
-			}
-			else if($account_type=="svc") {
-		?>		
-			<td>&nbsp;</td>
-
-			<td align=right><?php echo number_format($cashRow['amount']*1,2); ?></td>
-
-		<?php
-			}
-
-		?>		
-
 			<td align=right><?php echo number_format($cashRow['amount']*1,2); ?></td>
 		
 	<!--	<td>&nbsp;</td>
@@ -608,7 +555,6 @@ for($i=0;$i<$nm;$i++){
 		}
 		else {
 		?>		
-			<td>&nbsp;</td>
 			<td>&nbsp;</td>
 			<td>&nbsp;</td>
 
@@ -631,27 +577,14 @@ for($i=0;$i<$nm;$i++){
 	else if($type=="remittance"){
 		$revolvingTotal=$revolvingTotal+$revolving;
 		
-		$sjtNetTotal=$sjtNetTotal+$sjt_net_revenue;
-		$svcNetTotal=$svcNetTotal+$svc_net_revenue;
-
+		$depositTotal=$depositTotal+$deposit;
 	}
 	
 	if($type=="deposit"){
-		if($account_type=='sjt'){
-			$sjtNetTotal=$sjtNetTotal-($cashRow['amount']*1);
-			$svcNetTotal=0;
-
-
-		}
-		else {
-			$sjtNetTotal=0;
-			$svcNetTotal=$svcNetTotal-($cashRow['amount']*1);
-
-		}
-
+		$depositTotal=$depositTotal-($cashRow['amount']*1);
 	
 	}
-	$displayTotal=($revolvingTotal*1)+($svcNetTotal*1)+($sjtNetTotal*1);
+	$displayTotal=($revolvingTotal*1)+($depositTotal*1);
 	/*
 	if($overageSwitch=="overage"){
 		$displayTotal-=$overage;
@@ -663,11 +596,9 @@ for($i=0;$i<$nm;$i++){
 	
 	?>
 	<td align=right><?php echo number_format($revolvingTotal*1,2); ?></td>
-	<td align=right><?php echo number_format($sjtNetTotal*1,2); ?></td>
-	<td align=right><?php echo number_format($svcNetTotal*1,2); ?></td>
-
+	<td align=right><?php echo number_format($depositTotal*1,2); ?></td>
 	<td align=right><?php echo number_format($displayTotal*1,2); ?></td>
-	<td align=right><?php echo $remarks; ?> <a href='#' class='delete'  onclick='deleteRecord("<?php echo $transaction_id; ?>","cash")' >X</a></td>
+	<td align=right><?php echo $remarks; ?> <a href='javascript:void(0)' class='delete'  onclick='deleteRecord("<?php echo $transaction_id; ?>","cash")' >X</a></td>
 </tr>
 <?php
 
@@ -689,11 +620,11 @@ for($i=0;$i<$nm;$i++){
 	$rsBalance=$db->query($sqlBalance);
 	$nmBalance=$rsBalance->num_rows;
 	if($nmBalance>0){
-		$transferBalance="update beginning_balance_cash set revolving_fund='".$revolvingTotal."',for_deposit='".$depositTotal."' where log_id='".$next_id."'";
+		$transferBalance="update beginning_balance_cash set revolving_fund='".$revolvingTotal."',sjt_net_revenue='".$depositTotal."' where log_id='".$next_id."'";
 	
 	}
 	else {
-		$transferBalance="insert into beginning_balance_cash(log_id,revolving_fund,for_deposit) values ('".$next_id."','".$revolvingTotal."','".$depositTotal."')";
+		$transferBalance="insert into beginning_balance_cash(log_id,revolving_fund,sjt_net_revenue) values ('".$next_id."','".$revolvingTotal."','".$depositTotal."')";
 
 	}
 
@@ -703,11 +634,11 @@ for($i=0;$i<$nm;$i++){
 	$rsBalance=$db->query($sqlBalance);
 	$nmBalance=$rsBalance->num_rows;
 	if($nmBalance>0){
-		$transferBalance="update ending_balance_cash set revolving_fund='".$revolvingTotal."',for_deposit='".$depositTotal."' where log_id='".$log_id."'";
+		$transferBalance="update ending_balance_cash set revolving_fund='".$revolvingTotal."',sjt_net_revenue='".$depositTotal."' where log_id='".$log_id."'";
 	
 	}
 	else {
-		$transferBalance="insert into ending_balance_cash(log_id,revolving_fund,for_deposit) values ('".$log_id."','".$revolvingTotal."','".$depositTotal."')";
+		$transferBalance="insert into ending_balance_cash(log_id,revolving_fund,sjt_net_revenue) values ('".$log_id."','".$revolvingTotal."','".$depositTotal."')";
 	
 	}
 
@@ -730,17 +661,11 @@ if($nm>0){
 	$cTR=$cTransferRS->fetch_assoc();
 	$transaction_id=$row['transaction_id'];	
 	$revolvingTransfer=$cTR['total'];
-	$sjtNetTransfer=$cTR['sjt_net_revenue'];
-	$svcNetTransfer=$cTR['svc_net_revenue'];
-
-
-
-	$totalTransfer=$revolvingTransfer+$sjtNetTransfer+$svcNetTransfer;
+	$depositTransfer=$cTR['sjt_net_revenue'];
+	$totalTransfer=$revolvingTransfer+$depositTransfer;
 	
 	$revolvingTotal-=$revolvingTransfer;
-	$sjtNetTotal-=$sjtNetTransfer;
-	$svcNetTotal-=$svcNetTransfer;
-
+	$depositTotal-=$depositTransfer;
 	$displayTotal-=$totalTransfer;
 	$remarks=$cTR['reference_id'];
 	$edit_id=$row['id'];
@@ -752,7 +677,7 @@ if($nm>0){
 	<?php
 	if($_SESSION['viewMode']=="login"){
 	?>
-	<a href='#' style='text-decoration:none' onclick='window.open("cash_transfer.php?tID=<?php echo $edit_id; ?>","transfer","height=800, width=500, scrollbars=yes")'>
+	<a href='javascript:void(0)' style='text-decoration:none' onclick='window.open("cash_transfer.php?tID=<?php echo $edit_id; ?>","transfer","height=800, width=500, scrollbars=yes")'>
 	<?php
 	}
 	?>
@@ -766,25 +691,14 @@ if($nm>0){
 	?>	
 	</td>
 	<td>&nbsp;</td>
-	<td>&nbsp;</td>
-
-	<td>&nbsp;</td>
 	
-	<td>&nbsp;</td>
-
-
-	<td>&nbsp;</td>
-
-
 	<td>&nbsp;</td>
 	<td>&nbsp;</td>
 	<td>&nbsp;</td>
 	<td>&nbsp;</td>
 	
 	<td align=right><?php echo number_format($revolvingTransfer,2); ?></td>
-	<td align=right><?php echo number_format($sjtNetTransfer,2); ?></td>
-	<td align=right><?php echo number_format($svcNetTransfer,2); ?></td>
-
+	<td align=right><?php echo number_format($depositTransfer,2); ?></td>
 	<td align=right><?php echo number_format($totalTransfer,2); ?></td>
 
 	<td align=center>
@@ -823,7 +737,7 @@ if($nm>0){
 	} 
 	?></td>
 
-	<td align=right><?php echo $remarks; ?> <a class='delete' href='#' onclick='deleteRecord("<?php echo $transaction_id; ?>","cash")' >X</a></td>	
+	<td align=right><?php echo $remarks; ?> <a class='delete' href='javascript:void(0)' onclick='deleteRecord("<?php echo $transaction_id; ?>","cash")' >X</a></td>	
 </tr>
 <?php
 }
@@ -877,7 +791,7 @@ if($nm>0){
 		$control_id=$row['control_id'];
 	?>
 		<tr>
-		<td><a href="#" onclick='window.open("control_slip.php?edit_control=<?php echo $control_id; ?>","control slip","height=750, width=800, scrollbars=yes")' ><?php echo strtoupper($row['last_name']).", ".$row['first_name']; ?></td>
+		<td><a href="javascript:void(0)" onclick='window.open("control_slip.php?edit_control=<?php echo $control_id; ?>","control slip","height=750, width=800, scrollbars=yes")' ><?php echo strtoupper($row['last_name']).", ".$row['first_name']; ?></td>
 		<td><?php echo $station_name; ?></td>
 		<td><?php echo $row['unit']; ?></td>
 		</tr>

@@ -43,6 +43,8 @@ if(isset($_POST['ticket_seller'])){
 	$sjd=$_POST['sjd'];
 	$svt=$_POST['svt'];
 	$svd=$_POST['svd'];
+	$c=$_POST['c'];
+
 	
 	$sjt_loose=$_POST['sjt_loose'];
 	$sjd_loose=$_POST['sjd_loose'];
@@ -92,10 +94,10 @@ if(isset($_POST['ticket_seller'])){
 		$rs=$db->query($sql);
 		
 		$sql="insert into ticket_order(log_id,time,ticket_seller,cash_assistant,type,";
-		$sql.="transaction_id,sjt,sjd,svt,svd,sjt_loose,sjd_loose,svt_loose,svd_loose,unit,classification,reference_id,station,source_type) values ";
+		$sql.="transaction_id,sjt,sjd,svt,svd,sjt_loose,sjd_loose,svt_loose,svd_loose,c,unit,classification,reference_id,station,source_type) values ";
 		$sql.="('".$log_id."','".$date."','".$ticket_seller."','".$cash_assistant."','".$type."',";
 		$sql.="'".$transaction_id."','".$sjt."','".$sjd."','".$svt."','".$svd."','".$sjt_loose."',";
-		$sql.="'".$sjd_loose."','".$svt_loose."','".$svd_loose."','".$unit_type."','".$classification."','".$reference_id."','".$station."','".$_POST['source_type']."')";
+		$sql.="'".$sjd_loose."','".$svt_loose."','".$svd_loose."','".$c."','".$unit_type."','".$classification."','".$reference_id."','".$station."','".$_POST['source_type']."')";
 
 		$rs=$db->query($sql);
 		$insert_id=$db->insert_id;
@@ -123,12 +125,12 @@ if(isset($_POST['ticket_seller'])){
 
 		}
 		
-							$record_date=date("Y-m-d H:i:s");
+			$record_date=date("Y-m-d H:i:s");
 			
 			$record_sql="insert into history(action,element,transaction_time,reference_id,log_id) ";
 			$record_sql.=" values ";
 			$record_sql.="('insert','ticket order','".$record_date."','".$ticket_id."','".$log_id."')";
-			$record_rs=$record_db->query($record_sql);			
+//			$record_rs=$record_db->query($record_sql);			
 
 	}
 	else if($_POST['form_action']=="edit"){
@@ -157,11 +159,16 @@ if(isset($_POST['ticket_seller'])){
 
 			$transaction_type="annex";
 		}		
+		else if($ticket_type=="afpi"){
+
+			$transaction_type="afpi";
+		}		
+
 		$sql2="update transaction set log_type='".$transaction_type."' where id='".$_POST['trans_edit']."'";
 		$rs2=$db->query($sql2);		
 		
 		
-		$sql2="update ticket_order set ticket_seller='".$ticket_seller."',station='".$station."',sjt='".$sjt."',svt='".$svt."',sjd='".$sjd."',svd='".$svd."',sjt_loose='".$sjt_loose."',sjd_loose='".$sjd_loose."',svt_loose='".$svt_loose."',svd_loose='".$svd_loose."',source_type='".$_POST['source_type']."' where transaction_id='".$row['transaction_id']."'";
+		$sql2="update ticket_order set ticket_seller='".$ticket_seller."',station='".$station."',sjt='".$sjt."',svt='".$svt."',sjd='".$sjd."',svd='".$svd."',sjt_loose='".$sjt_loose."',sjd_loose='".$sjd_loose."',svt_loose='".$svt_loose."',svd_loose='".$svd_loose."'c='".$c."',source_type='".$_POST['source_type']."' where transaction_id='".$row['transaction_id']."'";
 		$rs2=$db->query($sql2);
 
 
@@ -187,12 +194,12 @@ if(isset($_POST['ticket_seller'])){
 			}		
 		}
 		
-					$record_date=date("Y-m-d H:i:s");
+			$record_date=date("Y-m-d H:i:s");
 			
 			$record_sql="insert into history(action,element,transaction_time,reference_id,log_id) ";
 			$record_sql.=" values ";
 			$record_sql.="('update','ticket order','".$record_date."','".$_POST['trans_edit']."','".$log_id."')";
-			$record_rs=$record_db->query($record_sql);		
+	//		$record_rs=$record_db->query($record_sql);		
 	}
 	
 }
@@ -225,6 +232,7 @@ if(isset($_GET['tID'])){
 	$sjd_loose=$row2['sjd_loose'];
 
 	$svt_loose=$row2['svt_loose'];
+	$c=$row2['c'];	
 	
 	$transactDate=$row2['time'];
 	$classification=$row2['classification'];
@@ -343,6 +351,7 @@ if($allow=="true"){
 	<option value='ticket_seller' <?php if($classification=='ticket_seller'){ echo "selected"; } ?> >To Ticket Seller</option>
 	<option value='finance' <?php if($classification=='finance'){ echo "selected"; } ?>>From Finance Train</option>
 	<option value='annex' <?php if($classification=='annex'){ echo "selected"; } ?>>From Annex</option>
+	<option value='afpi' <?php if($classification=='afpi'){ echo "selected"; } ?>>From AFPI</option>
 	<option value='catransfer' <?php if($classification=='catransfer'){ echo "selected"; } ?>>Turnover to CA</option>
 </select>
 
@@ -620,6 +629,8 @@ for($i=0;$i<=59;$i++){
 <tr class='category'><td>SJD (10 pieces)</td><td><input type='text' name='sjd' value='<?php echo $sjd; ?>' /></td><td><input type='text' name='sjd_loose' value='<?php echo $sjd_loose; ?>' /></td></tr>
 <tr class='grid'><td>SVT (100 pieces)</td><td><input type='text' name='svt' value='<?php echo $svt; ?>' /></td><td><input type='text' name='svt_loose' value='<?php echo $svt_loose; ?>' /></td></tr>
 <tr class='category'><td>SVD (10 pieces)</td><td><input type='text' name='svd' value='<?php echo $svd; ?>' /></td><td><input type='text' name='svd_loose' value='<?php echo $svd_loose; ?>' /></td></tr>
+<tr class='grid'><td>C (1 piece)</td><td colspan=2><input type='text' name='c' value='<?php echo $c; ?>' /></td></tr>
+
 <tr ><td colspan=3>&nbsp;</td></tr>
 <tr class='header'>
 <td>Cash Assistant</td><td colspan=2>

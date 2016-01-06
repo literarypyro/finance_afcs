@@ -8,8 +8,8 @@ require("db.php");
 $log_id=$_SESSION['log_id'];
 ?>
 <?php
-$db=new mysqli("localhost","root","","finance");
-$record_db=retrieveRecordDb();
+$db=retrieveDb();
+//$record_db=retrieveRecordDb();
 
 if(isset($_GET['tID'])){
 	
@@ -74,14 +74,14 @@ if(isset($_GET['tID'])){
 			$record_sql="insert into history(action,element,transaction_time,reference_id,log_id) ";
 			$record_sql.=" values ";
 			$record_sql.="('delete','cash transfer','".$record_date."','".$transaction_id."','".$log_id."')";
-			$record_rs=$record_db->query($record_sql);
+		//	$record_rs=$record_db->query($record_sql);
 				
 			$record_date=date("Y-m-d H:i:s");
 			
 			$record_sql="insert into history(action,element,transaction_time,reference_id,log_id) ";
 			$record_sql.=" values ";
 			$record_sql.="('delete','discrepancy','".$record_date."','".$transaction_id."','".$log_id."')";
-			$record_rs=$record_db->query($record_sql);			
+		//	$record_rs=$record_db->query($record_sql);			
 			
 		}
 		
@@ -117,7 +117,7 @@ if(isset($_GET['tID'])){
 				$record_sql="insert into history(action,element,transaction_time,reference_id,log_id) ";
 				$record_sql.=" values ";
 				$record_sql.="('delete','allocation - c. slip','".$record_date."','".$remitRow['control_id']."','".$log_id."')";
-				$record_rs=$record_db->query($record_sql);			
+			//	$record_rs=$record_db->query($record_sql);			
 			
 			
 			
@@ -139,7 +139,7 @@ if(isset($_GET['tID'])){
 				$record_sql="insert into history(action,element,transaction_time,reference_id,log_id) ";
 				$record_sql.=" values ";
 				$record_sql.="('delete','remittance - c. slip','".$record_date."','".$remitRow['control_id']."','".$log_id."')";
-				$record_rs=$record_db->query($record_sql);			
+			//	$record_rs=$record_db->query($record_sql);			
 
 			
 			}
@@ -170,7 +170,7 @@ if(isset($_GET['tID'])){
 			$record_sql="insert into history(action,element,transaction_time,reference_id,log_id) ";
 			$record_sql.=" values ";
 			$record_sql.="('delete','ticket order','".$record_date."','".$cash_transfer."','".$log_id."')";
-			$record_rs=$record_db->query($record_sql);			
+//$record_rs=$record_db->query($record_sql);			
 
 
 			

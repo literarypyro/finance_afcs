@@ -120,17 +120,17 @@ for($i=0;$i<$nm;$i++){
 		$for_ca_prefix=$start;	
 		$for_ca_suffix=$end;	
 		
-		for($zz=68;$zz<78;$zz++){
+		for($zz=68;$zz<79;$zz++){
 			$sumFormula[chr($zz)]="";
 		
 		}
 		
-		for($zz=79;$zz<91;$zz++){
+		for($zz=79;$zz<92;$zz++){
 			$sumFormula[chr($zz)]="";
 		
 		}
 
-		for($zz=65;$zz<75;$zz++){
+		for($zz=65;$zz<76;$zz++){
 			$sumFormula["A".chr($zz)]="";
 		
 		}
@@ -166,21 +166,30 @@ for($i=0;$i<$nm;$i++){
 			$allocationRS=$db->query($allocationSQL);
 			$allocationNM=$allocationRS->num_rows;
 			
-
+			$sold_ticket['sjt']['reg']=0;
+			$sold_ticket['sjt']['disc']=0;
+			$sold_ticket['svc']['reg']=0;
+			$sold_ticket['svc']['add_value']=0;
+			$sold_ticket['svc']['issuance_fee']=0;
 
 
 			$sjtSold="";
 			$svtSold="";
+			$sjdSold="";
 
 			for($m=0;$m<$allocationNM;$m++){
-				$allocationRow=$allocationRS->fetch_assoc();
-				$sjtSold+=$allocationRow['sjt'];
-				$svtSold+=$allocationRow['svt'];
 
+				$allocationRow=$allocationRS->fetch_assoc();
+				
+				$sold_ticket[$allocationRow['ticket_type']][$allocationRow['value_type']]+=$allocationRow['quantity'];
+				
 			
-			
-			}			
-			
+			}
+
+				$sjtSold=$sold_ticket['sjt']['reg']*1;
+				$sjdSold=$sold_ticket['sjt']['pwd']+$sold_ticket['sjt']['disc'];
+				$svtSold=$sold_ticket['svc']['reg'];
+
 			$adjustmentSQL="select * from control_sales_amount inner join control_remittance on control_sales_amount.control_id=control_remittance.control_id where remit_log='".$log_id."' and station='".$stationStamp."' and remit_ticket_seller='".$row2['remit_ticket_seller']."'";
 			
 			
@@ -188,15 +197,35 @@ for($i=0;$i<$nm;$i++){
 			$adjustmentNM=$adjustmentRS->num_rows;
 			$sjtAmount=0;
 			$svtAmount=0;
-			
-			
+			$sjtIssuance=0;
+		
+			$ticket_amount['sjt']['reg']=0;
+			$ticket_amount['sjt']['disc']=0;
+			$ticket_amount['svc']['reg']=0;
+			$ticket_amount['svc']['add_value']=0;
+			$ticket_amount['svc']['issuance_fee']=0;		
+
 			for($n=0;$n<$adjustmentNM;$n++){
-				$adjustmentRow=$adjustmentRS->fetch_assoc();
-				$sjtAmount+=$adjustmentRow['sjt']*1;
-				$svtAmount+=$adjustmentRow['svt']*1;
+				$allocationRow=$adjustmentRS->fetch_assoc();
 				
-			}			
-			
+				$ticket_amount[$allocationRow['ticket_type']][$allocationRow['value_type']]+=$allocationRow['amount'];
+
+
+		//		$sjtAmount+=$ticket_amount['sjt']['reg']*1;
+		//		$sjdAmount+=$ticket_amount['sjt']['pwd']*1+$ticket_amount['sjt']['disc']*1;
+		//		$svtAmount+=$ticket_amount['svc']['bpi']*1+$ticket_amount['svt']['smart']*1+$ticket_amount['svt']['globe']*1+$ticket_amount['svt']['add_value']*1+$ticket_amount['svt']['concessionary']*1;
+		//		$svtIssuance+=$ticket_amount['svc']['issuance_fee']*1;
+
+
+
+			}
+
+				$sjtAmount=$ticket_amount['sjt']['reg']*1;
+				$sjdAmount=$ticket_amount['sjt']['pwd']*1+$ticket_amount['sjt']['disc']*1;
+				$svtAmount=$ticket_amount['svc']['bpi']*1+$ticket_amount['svc']['smart']*1+$ticket_amount['svc']['globe']*1+$ticket_amount['svc']['add_value']*1+$ticket_amount['svc']['concessionary']*1;
+				$svtIssuance=$ticket_amount['svc']['issuance_fee']*1;
+				
+
 			$ot_amount=0;
 			$fare_adjustment=0;
 			
@@ -206,7 +235,7 @@ for($i=0;$i<$nm;$i++){
 			$ot_amount=0;	
 			for($n=0;$n<$fareNM;$n++){
 				$fareRow=$fareRS->fetch_assoc();
-				$fare_adjustment+=$fareRow['sjt']+$fareRow['sjd']+$fareRow['svt']+$fareRow['svd']+$fareRow['c'];
+				$fare_adjustment+=$fareRow['sjt']+$fareRow['sjd']+$fareRow['svt']+$fareRow['svd']+$fareRow['c']+$fareRow['mismatch']+$fareRow['pwd'];
 				$ot_amount+=$fareRow['ot'];
 			}					
 			
@@ -217,12 +246,14 @@ for($i=0;$i<$nm;$i++){
 			
 			$sj_unreg=0;
 			$sv_unreg=0;
+			$issuance_unreg=0;
 			
 			for($m=0;$m<$unregNM;$m++){
 				$unregRow=$unregRS->fetch_assoc();
 				$sj_unreg+=$unregRow['sj']*1;
 				$sv_unreg+=$unregRow['sv']*1;
-			
+				$issuance_unreg+=$unregRow['issuance_fee']*1;
+	
 			}	
 
 			//$discountSQL="select * from discount where control_id in (SELECT control_id FROM control_remittance where remit_log='".$log_id."' and station='".$stationStamp."' and remit_ticket_seller='".$row2['remit_ticket_seller']."')";
@@ -258,7 +289,7 @@ for($i=0;$i<$nm;$i++){
 				$sv_refund+=$refundRow['sv']*1;
 
 				$sj_r_amount+=$refundRow['sj_amount']*1;
-				$sv_r_amount+=$refundRow['sv_amount']*1;
+				$sv_r_amount+=$refundRow['tvm']*1;
 			}
 
 			$cashSQL="select sum(if(discrepancy.type='overage',amount,0)) as overage,sum(if(discrepancy.type='shortage',amount,0)) as unpaid_shortage from discrepancy inner join cash_transfer on discrepancy.transaction_id=cash_transfer.transaction_id where discrepancy.log_id='".$log_id."' and discrepancy.ticket_seller='".$row2['remit_ticket_seller']."' and cash_transfer.station='".$stationStamp."'";
@@ -291,9 +322,9 @@ for($i=0;$i<$nm;$i++){
 			$unpaid_shortage-=$paid_shortage;				
 			
 //			$unsoldSQL="select type,sum(loose_good) as ticket_sum,sum(loose_defective) as ticket_sum2 from control_unsold where control_id in (SELECT control_id FROM control_remittance where remit_log='".$log_id."' and station='".$stationStamp."' and remit_ticket_seller='".$row2['remit_ticket_seller']."') group by type";
+			$unsoldSQL="select type,sum(loose_good) as ticket_sum,sum(loose_defective) as ticket_sum2 from control_unsold where control_id='".$row2['control_id']."' group by type";
 
-
-			$unsoldSQL="select type,sum(loose_good) as ticket_sum,sum(loose_defective) as ticket_sum2 from control_unsold inner join control_remittance on control_unsold.control_id=control_remittance.control_id where remit_log='".$log_id."' and station='".$stationStamp."' and remit_ticket_seller='".$row2['remit_ticket_seller']."' group by type";
+			//$unsoldSQL="select type,sum(loose_good) as ticket_sum,sum(loose_defective) as ticket_sum2 from control_unsold inner join control_remittance on control_unsold.control_id=control_remittance.control_id where remit_log='".$log_id."' and station='".$stationStamp."' and remit_ticket_seller='".$row2['remit_ticket_seller']."' group by type";
 			$unsoldRS=$db->query($unsoldSQL);
 			$unsoldNM=$unsoldRS->num_rows;
 			
@@ -419,7 +450,6 @@ for($i=0;$i<$nm;$i++){
 				}
 			}			
 			
-			
 			if($k==0){
 			}
 			else {
@@ -433,15 +463,20 @@ for($i=0;$i<$nm;$i++){
 					//if($compare>$end){
 					if($compare<$end){
 
-						for($zz=68;$zz<78;$zz++){
+						for($zz=68;$zz<79;$zz++){
 							$sumFormula[chr($zz)].=chr($zz).$start.":".chr($zz).($rowCount*1).",";
 						}
 						
-						for($zz=79;$zz<91;$zz++){
-							$sumFormula[chr($zz)].=chr($zz).$start.":".chr($zz).($rowCount*1).",";
+						for($zz=79;$zz<92;$zz++){
+
+							if($zz==91){ $pref="AA"; }
+							else { $pref=chr($zz); }	
+
+
+							$sumFormula[$pref].=$pref.$start.":".$pref.($rowCount*1).",";
 						}
 
-						for($zz=65;$zz<75;$zz++){
+						for($zz=65;$zz<76;$zz++){
 							$sumFormula["A".chr($zz)].="A".chr($zz).$start.":A".chr($zz).($rowCount*1).",";
 						}
 					}
@@ -462,34 +497,53 @@ for($i=0;$i<$nm;$i++){
 					$rowCount++;
 				}
 			}
+
+			
 				addContent(setRange("B".$rowCount,"B".$rowCount),$excel,$ticket_sellerID,"true",$ExWs);
 
 				addContent(setRange("C".$rowCount,"C".$rowCount),$excel,$ticket_seller,"true",$ExWs);
 			
 				addContent(setRange("D".$rowCount,"D".$rowCount),$excel,$sjtSold,"true",$ExWs);
-				addContent(setRange("F".$rowCount,"F".$rowCount),$excel,$svtSold,"true",$ExWs);
-			
+
 				addContent(setRange("E".$rowCount,"E".$rowCount),$excel,$sjtAmount,"true",$ExWs);
-				addContent(setRange("G".$rowCount,"G".$rowCount),$excel,$svtAmount,"true",$ExWs);
 
-				addContent(setRange("H".$rowCount,"H".$rowCount),$excel,$fare_adjustment,"true",$ExWs);
-				addContent(setRange("I".$rowCount,"I".$rowCount),$excel,$ot_amount,"true",$ExWs);
+				addContent(setRange("F".$rowCount,"F".$rowCount),$excel,$sjdSold,"true",$ExWs);
+
+				addContent(setRange("G".$rowCount,"G".$rowCount),$excel,$sjdAmount,"true",$ExWs);
+
+				addContent(setRange("H".$rowCount,"H".$rowCount),$excel,$svtSold,"true",$ExWs);
+
+				addContent(setRange("I".$rowCount,"I".$rowCount),$excel,$svtIssuance,"true",$ExWs);
 			
-				addContent(setRange("K".$rowCount,"K".$rowCount),$excel,($sj_unreg*1+$sv_unreg*1),"true",$ExWs);
+				addContent(setRange("J".$rowCount,"J".$rowCount),$excel,$svtAmount,"true",$ExWs);
 
-				addContent(setRange("L".$rowCount,"L".$rowCount),$excel,($sj_discount),"true",$ExWs);
-				addContent(setRange("M".$rowCount,"M".$rowCount),$excel,($sv_discount),"true",$ExWs);
+				addContent(setRange("K".$rowCount,"K".$rowCount),$excel,$fare_adjustment,"true",$ExWs);
+				addContent(setRange("L".$rowCount,"L".$rowCount),$excel,$ot_amount,"true",$ExWs);
+			
 
-				addContent(setRange("N".$rowCount,"N".$rowCount),$excel,($sj_refund),"true",$ExWs);
 
-				addContent(setRange("O".$rowCount,"O".$rowCount),$excel,($sj_r_amount),"true",$ExWs);
-				addContent(setRange("P".$rowCount,"P".$rowCount),$excel,($sv_refund),"true",$ExWs);
-				addContent(setRange("Q".$rowCount,"Q".$rowCount),$excel,($sv_r_amount),"true",$ExWs);
+				addContent(setRange("N".$rowCount,"N".$rowCount),$excel,($issuance_unreg*1),"true",$ExWs);
+				addContent(setRange("O".$rowCount,"O".$rowCount),$excel,($sv_unreg*1+$sj_unreg*1),"true",$ExWs);
+
+
+
+
+
+//				addContent(setRange("P".$rowCount,"P".$rowCount),$excel,($sj_discount),"true",$ExWs);
+//				addContent(setRange("Q".$rowCount,"Q".$rowCount),$excel,($sv_discount),"true",$ExWs);
+
+				addContent(setRange("P".$rowCount,"P".$rowCount),$excel,($sj_refund),"true",$ExWs);
+
+				addContent(setRange("Q".$rowCount,"Q".$rowCount),$excel,($sj_r_amount),"true",$ExWs);
+				addContent(setRange("R".$rowCount,"R".$rowCount),$excel,($sv_refund),"true",$ExWs);
+				addContent(setRange("S".$rowCount,"S".$rowCount),$excel,($sv_r_amount),"true",$ExWs);
 							
-				addContent(setRange("R".$rowCount,"R".$rowCount),$excel,($overage),"true",$ExWs);
+				addContent(setRange("T".$rowCount,"T".$rowCount),$excel,($overage),"true",$ExWs);
 
-				addContent(setRange("S".$rowCount,"S".$rowCount),$excel,($paid_shortage),"true",$ExWs);
-				addContent(setRange("T".$rowCount,"T".$rowCount),$excel,($unpaid_shortage),"true",$ExWs);
+				addContent(setRange("U".$rowCount,"U".$rowCount),$excel,($paid_shortage),"true",$ExWs);
+				addContent(setRange("V".$rowCount,"V".$rowCount),$excel,($unpaid_shortage),"true",$ExWs);
+
+
 
 				/*
 				addContent(setRange("Y".$rowCount,"Y".$rowCount),$excel,($sjtLoose),"true",$ExWs);
@@ -498,17 +552,12 @@ for($i=0;$i<$nm;$i++){
 				addContent(setRange("AB".$rowCount,"AB".$rowCount),$excel,($svtLoose),"true",$ExWs);
 				*/
 
-				addContent(setRange("U".$rowCount,"U".$rowCount),$excel,$sjt_discrepancy,"true",$ExWs);
-				addContent(setRange("V".$rowCount,"V".$rowCount),$excel,$sjd_discrepancy,"true",$ExWs);
-				addContent(setRange("W".$rowCount,"W".$rowCount),$excel,$svt_discrepancy,"true",$ExWs);
-				addContent(setRange("X".$rowCount,"X".$rowCount),$excel,$svd_discrepancy,"true",$ExWs);
+				addContent(setRange("W".$rowCount,"W".$rowCount),$excel,$sjt_discrepancy,"true",$ExWs);
+				addContent(setRange("X".$rowCount,"X".$rowCount),$excel,$svt_discrepancy,"true",$ExWs);
 
 				
 				addContent(setRange("Y".$rowCount,"Y".$rowCount),$excel,$sjtDefective,"true",$ExWs);
-				addContent(setRange("Z".$rowCount,"Z".$rowCount),$excel,$sjdDefective,"true",$ExWs);
-				addContent(setRange("AA".$rowCount,"AA".$rowCount),$excel,$svdDefective,"true",$ExWs);
-				addContent(setRange("AB".$rowCount,"AB".$rowCount),$excel,$svtDefective,"true",$ExWs);
-
+				addContent(setRange("Z".$rowCount,"Z".$rowCount),$excel,$svtDefective,"true",$ExWs);
 				/*
 				addContent(setRange("AG".$rowCount,"AG".$rowCount),$excel,$sjtDefective,"true",$ExWs);
 				addContent(setRange("AH".$rowCount,"AH".$rowCount),$excel,$sjdDefective,"true",$ExWs);
@@ -520,7 +569,6 @@ for($i=0;$i<$nm;$i++){
 		}
 
 		addContent(setRange("A".$for_ca_prefix,"A".$for_ca_suffix),$excel,$cash_assistant,"true",$ExWs);
-
 
 		
 	if($counter>=27){
@@ -534,30 +582,41 @@ for($i=0;$i<$nm;$i++){
 		$counter++;
 		$rowCount++;
 	}
+
+
 	addContent(setRange("A".$rowCount,"C".$rowCount),$excel,"Subtotal","true",$ExWs);
 	$excel->getActiveSheet()->getStyle("A".$rowCount.":C".$rowCount)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
 //	$excel->getActiveSheet()->getStyle("A".$rowCount.":AJ".$rowCount)->getFill()->setFillType(PHPExcel_Style_Fill::FILL_SOLID)->getStartColor()->setARGB("00ffff99");
 
 	$excel->getActiveSheet()->getStyle("A".$rowCount.":AJ".$rowCount)->getFont()->setBold(true);
 
-	for($zz=68;$zz<78;$zz++){
+	for($zz=68;$zz<79;$zz++){
 		$sumFormula[chr($zz)].=chr($zz).$start.":".chr($zz).$end;
 
 		addContent(setRange(chr($zz).$rowCount,chr($zz).$rowCount),$excel,encapsulateFormula($sumFormula[chr($zz)]),"true",$ExWs);
 
 	}
+	
+
+
+	///Supposedly 92
+	for($zz=79;$zz<92;$zz++){
+
+		if($zz==91){ $pref="AA"; }
+		else { $pref=chr($zz); }	
 			
-	for($zz=79;$zz<91;$zz++){
-		$sumFormula[chr($zz)].=chr($zz).$start.":".chr($zz).$end;
-		addContent(setRange(chr($zz).$rowCount,chr($zz).$rowCount),$excel,encapsulateFormula($sumFormula[chr($zz)]),"true",$ExWs);
+		$sumFormula[chr($zz)].=$pref.$start.":".$pref.$end;
+		addContent(setRange($pref.$rowCount,$pref.$rowCount),$excel,encapsulateFormula($sumFormula[chr($zz)]),"true",$ExWs);
 
 	}
 
-	for($zz=65;$zz<71;$zz++){
+	for($zz=65;$zz<72;$zz++){
 		$sumFormula["A".chr($zz)].="A".chr($zz).$start.":A".chr($zz).$end;
 		addContent(setRange("A".chr($zz).$rowCount,"A".chr($zz).$rowCount),$excel,encapsulateFormula($sumFormula["A".chr($zz)]),"true",$ExWs);
 		
 	}
+
+
 /*
 	
 	addContent(setRange("D".$rowCount,"D".$rowCount),$excel,"=sum(D".$start.":D".$end.")","true",$ExWs);
@@ -614,6 +673,11 @@ for($i=0;$i<$nm;$i++){
 
 $gridCount=count($grid);
 
+
+
+
+$grandRowCount=$rowCount;
+
 addContent(setRange("A".$rowCount,"C".$rowCount),$excel,"Grand Total","true",$ExWs);
 $excel->getActiveSheet()->getStyle("A".$rowCount.":C".$rowCount)->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
 //$excel->getActiveSheet()->getStyle("A".$rowCount.":AJ".$rowCount)->getFill()->setFillType(PHPExcel_Style_Fill::FILL_SOLID)->getStartColor()->setARGB("00339966");
@@ -629,6 +693,7 @@ $prefix[6]="J";
 $prefix[7]="K";
 $prefix[8]="L";
 $prefix[9]="M";
+
 $prefix[10]="O";
 $prefix[11]="P";
 $prefix[12]="Q";
@@ -643,10 +708,9 @@ $prefix[20]="Z";
 $prefix[21]="AA";
 $prefix[22]="AB";
 $prefix[23]="AC";
-$prefix[24]="AD";
-$prefix[25]="AE";
-$prefix[26]="AF";
-$prefix[27]="S";
+
+$prefix[24]="N";
+$prefix[25]="S";
 
 /*
 $prefix[27]="AG";
@@ -688,6 +752,7 @@ $nm=$rs->num_rows;
 $sjt_sales["pos"]=0;
 $svt_sales['pos']=0;
 
+
 $sjt_sales['tim_a']=0;
 $svt_sales['tim_a']=0;
 
@@ -720,24 +785,28 @@ for($i=0;$i<$nm;$i++){
 	$row=$rs->fetch_assoc();
 	$log_id=$row['id'];
 
-	$sql2="select * from control_sales_amount inner join control_remittance on control_sales_amount.control_id=control_remittance.control_id where remit_log='".$log_id."' and station='".$stationStamp."'";
+	$sql2="select * from control_sales_amount inner join control_remittance on control_sales_amount.control_id=control_remittance.control_id where  source_type='pos' and ticket_type='sjt' and remit_log='".$log_id."' and station='".$stationStamp."'";
 
 	$rs2=$db->query($sql2);
 	$nm2=$rs2->num_rows;	
 	for($k=0;$k<$nm2;$k++){
 		$row2=$rs2->fetch_assoc();
-		$sjt_sales[$row2['source_type']]+=$row2['sjt']*1;		
-		$svt_sales[$row2['source_type']]+=$row2['svt']*1;
+		$sjt_sales[$row2['value_type']]+=$row2['amount']*1;		
+
 			
 	}
 
-	$sql2="select sum(sjt+sjd+svt+svd+c+ot) as fare_adjustment  from fare_adjustment inner join control_remittance on fare_adjustment.control_id=control_remittance.control_id where remit_log='".$log_id."' and station='".$stationStamp."'";
+
+
+	$sql2="select (sjt+sjd+svt+svd+c+ot+pwd+mismatch) as fare_adjustment from fare_adjustment inner join control_remittance on fare_adjustment.control_id=control_remittance.control_id where remit_log='".$log_id."' and station='".$stationStamp."'";
+
 	$rs2=$db->query($sql2);
 	$nm2=$rs2->num_rows;	
 	for($k=0;$k<$nm2;$k++){
 		$row2=$rs2->fetch_assoc();
 		$fare_adjustment+=$row2['fare_adjustment'];
 	}	
+	
 	
 //	$sql2="select sum(sj+sv) as unreg_sale from unreg_sale where control_id in (SELECT control_id FROM control_remittance where remit_log='".$log_id."' and station='".$stationStamp."')";
 
@@ -772,6 +841,17 @@ for($i=0;$i<$nm;$i++){
 		$discount+=$row2['discount'];
 	}		
 	
+	$sql2="select sum(tvm_refund) as tvm_refund from control_cash inner join control_remittance on control_cash.control_id=control_remittance.control_id  where remit_log='".$log_id."' and station='".$stationStamp."'";
+	$rs2=$db->query($sql2);
+	$nm2=$rs2->num_rows;	
+	for($k=0;$k<$nm2;$k++){
+		$row2=$rs2->fetch_assoc();
+		$tvm_refund+=$row2['tvm_refund'];
+	}		
+
+
+
+
 //	$sql2="select sum(sj_amount+sv_amount) as refund from refund where control_id in (SELECT control_id FROM control_remittance where remit_log='".$log_id."' and station='".$stationStamp."')";
 	
 	
@@ -787,7 +867,12 @@ for($i=0;$i<$nm;$i++){
 	
 }
 
-$grandTotal+=$sjt_sales['pos'];
+$grandTotal+=$sjt_sales["reg"];
+$grandTotal+=$sjt_sales["disc"];
+$grandTotal+=$sjt_sales["pwd"];
+
+
+//$grandTotal+=$sjt_sales['pos'];
 $grandTotal+=$svt_sales['pos'];
 
 $grandTotal+=$sjt_sales['tim_a'];
@@ -803,8 +888,6 @@ $grandTotal+=$sjt_sales['tim_d'];
 $grandTotal+=$svt_sales['tim_d'];
 
 
-
-
 $grandTotal+=$fare_adjustment;
 $grandTotal+=$ot_amount;
 $grandTotal+=$unreg_sale;
@@ -816,26 +899,33 @@ $deductionsTotal+=$refund;
 
 $netSales=$grandTotal-$deductionsTotal;
 
-	addContent(setRange("B33","B33"),$excel,$sjt_sales['pos'],"true",$ExWs);
+	addContent(setRange("B33","C33"),$excel,"=E".$grandRowCount,"true",$ExWs);
+/*
 	addContent(setRange("C33","C33"),$excel,$sjt_sales['tim_a'],"true",$ExWs);
 	addContent(setRange("D33","D33"),$excel,$sjt_sales['tim_b'],"true",$ExWs);
 	addContent(setRange("E33","E33"),$excel,$sjt_sales['tim_c'],"true",$ExWs);
 	addContent(setRange("F33","F33"),$excel,$sjt_sales['tim_d'],"true",$ExWs);
+*/
+	addContent(setRange("B34","C34"),$excel,"=G".$grandRowCount,"true",$ExWs);
+	//addContent(setRange("B35","C35"),$excel,$sjt_sales['pwd'],"true",$ExWs);
 
-	addContent(setRange("B34","B34"),$excel,$svt_sales['pos'],"true",$ExWs);
+/*
 	addContent(setRange("C34","C34"),$excel,$svt_sales['tim_a'],"true",$ExWs);
 	addContent(setRange("D34","D34"),$excel,$svt_sales['tim_b'],"true",$ExWs);
 	addContent(setRange("E34","E34"),$excel,$svt_sales['tim_c'],"true",$ExWs);
 	addContent(setRange("F34","F34"),$excel,$svt_sales['tim_d'],"true",$ExWs);
 
+*/
+	addContent(setRange("B35","C35"),$excel,"=K".$grandRowCount,"true",$ExWs);
+	addContent(setRange("B36","C36"),$excel,"=L".$grandRowCount,"true",$ExWs);
+	
+	addContent(setRange("B37","C37"),$excel,$tvm_refund,"true",$ExWs);
 
-	addContent(setRange("B35","F35"),$excel,$fare_adjustment,"true",$ExWs);
-	addContent(setRange("B36","F36"),$excel,$ot_amount,"true",$ExWs);
-	addContent(setRange("B37","F37"),$excel,$unreg_sale,"true",$ExWs);
+
+	addContent(setRange("B38","C38"),$excel,"=O".$grandRowCount,"true",$ExWs);
 
 	//addContent(setRange("C39","C39"),$excel,"=sum(C33:C38)","true",$ExWs);
-	addContent(setRange("B39","F39"),$excel,$refund,"true",$ExWs);
-	addContent(setRange("B40","F40"),$excel,$discount,"true",$ExWs);
+	addContent(setRange("B40","C40"),$excel,"=Q".$grandRowCount."+S".$grandRowCount,"true",$ExWs);
 
 
 $sql="select * from logbook where date='".$dsrDate."' and station='".$station."' order by field(revenue,'open','close'),field(shift,3,1,2)";
@@ -862,6 +952,11 @@ $sjt_subtotal=0;
 $sjd_subtotal=0;	
 $svt_subtotal=0;	
 $svd_subtotal=0;	
+
+$sold_ticket_1['sjt']['reg']=0;
+$sold_ticket_1['sjt']['disc']=0;
+
+$sold_ticket_1['svc']['reg']=0;
 
 $sjt_deductions=0;	
 $sjd_deductions=0;	
@@ -949,13 +1044,13 @@ for($i=0;$i<$nm;$i++){
 			$row2=$rs2->fetch_assoc();
 			$sjt_initial_amount+=$row2['sjt']+$row2['sjt_loose'];
 			$sjd_initial_amount+=$row2['sjd']+$row2['sjd_loose'];
-			$svt_initial_amount+=$row2['svt']+$row2['svt_loose'];
+			$svt_initial_amount+=$row2['svt']+$row2['svt_loose']+$row2['c'];
 			$svd_initial_amount+=$row2['svd']+$row2['svd_loose'];
 	
 		}
 	}
 
-	$sql2="select * from transaction inner join ticket_order on transaction.transaction_id=ticket_order.transaction_id where transaction.log_id='".$log_id."' and log_type='annex'";
+	$sql2="select * from transaction inner join ticket_order on transaction.transaction_id=ticket_order.transaction_id where transaction.log_id='".$log_id."' and log_type in ('annex','afpi')";
 	$rs2=$db->query($sql2);
 	$nm2=$rs2->num_rows;	
 	if($nm2>0){
@@ -964,7 +1059,7 @@ for($i=0;$i<$nm;$i++){
 
 			$sjt_additional_amount+=$row2['sjt']+$row2['sjt_loose'];	
 			$sjd_additional_amount+=$row2['sjd']+$row2['sjd_loose'];	
-			$svt_additional_amount+=$row2['svt']+$row2['svt_loose'];	
+			$svt_additional_amount+=$row2['svt']+$row2['svt_loose']+$row2['c'];	
 			$svd_additional_amount+=$row2['svd']+$row2['svd_loose'];	
 		
 		
@@ -981,14 +1076,28 @@ for($i=0;$i<$nm;$i++){
 	$nm2=$rs2->num_rows;
 	
 	if($nm2>0){
-		$row2=$rs2->fetch_assoc();
-		$sjt_sold+=$row2['sjt'];
-		$sjd_sold+=$row2['sjd'];
-		$svt_sold+=$row2['svt'];
-		$svd_sold+=$row2['svd'];
-	
-	}
+		for($k=0;$k<$nm2;$k++){
 
+			$row2=$rs2->fetch_assoc();
+			$sjt_sold+=$row2['sjt'];
+			$sjd_sold+=$row2['sjd'];
+			$svt_sold+=$row2['svt'];
+			$svd_sold+=$row2['svd'];
+		}
+	}
+	$sql2="select * from control_sold inner join remittance on control_sold.control_id=remittance.control_id where log_id='".$log_id."'";
+	
+	$rs2=$db->query($sql2);
+	$nm2=$rs2->num_rows;
+	
+	if($nm2>0){
+		for($k=0;$k<$nm2;$k++){
+			$row2=$rs2->fetch_assoc();
+			$sold_ticket_1[$row2['ticket_type']][$row2['value_type']]+=$row2['quantity'];
+
+		}
+
+	}
 	$sql2="select * from control_unsold inner join remittance on control_unsold.control_id=remittance.control_id where log_id='".$log_id."'";
 	$rs2=$db->query($sql2);
 	$nm2=$rs2->num_rows;	
@@ -1087,7 +1196,6 @@ for($i=0;$i<$nm;$i++){
 
 
 	
-	
 	$sjt_discrep=$sjt_overage-$sjt_shortage;
 	
 	$sjd_discrep=$sjd_overage-$sjd_shortage;
@@ -1142,61 +1250,53 @@ $sjd_grand_total=$sjd_subtotal-$sjd_physically_defective-$sjd_deduction+$sjd_dis
 $svt_grand_total=$svt_subtotal-$svt_physically_defective-$svt_deduction+$svt_discrep;
 $svd_grand_total=$svd_subtotal-$svd_physically_defective-$svd_deduction+$svd_discrep;
 	
+
+
+
 	if(isset($_GET['ext'])){
 	}
 	else {
-	addContent(setRange("K33","K33"),$excel,$sjt_beginning_balance,"true",$ExWs);
-	addContent(setRange("L33","L33"),$excel,$sjd_beginning_balance,"true",$ExWs);
-	addContent(setRange("M33","M33"),$excel,$svt_beginning_balance,"true",$ExWs);
-	addContent(setRange("N33","N33"),$excel,$svd_beginning_balance,"true",$ExWs);	
+	addContent(setRange("H33","I33"),$excel,$sjt_beginning_balance,"true",$ExWs);
+	addContent(setRange("J33","K33"),$excel,$svt_beginning_balance,"true",$ExWs);
 	
-	addContent(setRange("K34","K34"),$excel,$sjt_initial_amount,"true",$ExWs);
-	addContent(setRange("L34","L34"),$excel,$sjd_initial_amount,"true",$ExWs);
-	addContent(setRange("M34","M34"),$excel,$svt_initial_amount,"true",$ExWs);
-	addContent(setRange("N34","N34"),$excel,$svd_initial_amount,"true",$ExWs);
+	addContent(setRange("H34","I34"),$excel,$sjt_initial_amount,"true",$ExWs);
+	addContent(setRange("J34","K34"),$excel,$svt_initial_amount,"true",$ExWs);
 
-	addContent(setRange("K35","K35"),$excel,$sjt_additional_amount,"true",$ExWs);
-	addContent(setRange("L35","L35"),$excel,$sjd_additional_amount,"true",$ExWs);
-	addContent(setRange("M35","M35"),$excel,$svt_additional_amount,"true",$ExWs);
-	addContent(setRange("N35","N35"),$excel,$svd_additional_amount,"true",$ExWs);	
+	addContent(setRange("H35","I35"),$excel,$sjt_additional_amount,"true",$ExWs);
+	addContent(setRange("J35","K35"),$excel,$svt_additional_amount,"true",$ExWs);
 	
-	addContent(setRange("K37","K37"),$excel,$sjt_sold,"true",$ExWs);
-	addContent(setRange("L37","L37"),$excel,$sjd_sold,"true",$ExWs);
-	addContent(setRange("M37","M37"),$excel,$svt_sold,"true",$ExWs);
-	addContent(setRange("N37","N37"),$excel,$svd_sold,"true",$ExWs);		
+	addContent(setRange("H37","I37"),$excel,($sold_ticket_1['sjt']['reg']+$sold_ticket_1['sjt']['disc']),"true",$ExWs);
+	addContent(setRange("J37","K37"),$excel,$sold_ticket_1['svc']['reg'],"true",$ExWs);
 	
-	addContent(setRange("K38","K38"),$excel,$sjt_physically_defective,"true",$ExWs);
-	addContent(setRange("L38","L38"),$excel,$sjd_physically_defective,"true",$ExWs);
-	addContent(setRange("M38","M38"),$excel,$svt_physically_defective,"true",$ExWs);
-	addContent(setRange("N38","N38"),$excel,$svd_physically_defective,"true",$ExWs);		
+	addContent(setRange("H38","I38"),$excel,$sjt_physically_defective,"true",$ExWs);
+	addContent(setRange("J38","K38"),$excel,$svt_physically_defective,"true",$ExWs);
 	
-	addContent(setRange("K39","K39"),$excel,$sjt_defective*1,"true",$ExWs);
-	addContent(setRange("L39","L39"),$excel,$sjd_defective*1,"true",$ExWs);
-	addContent(setRange("M39","M39"),$excel,$svt_defective*1,"true",$ExWs);
-	addContent(setRange("N39","N39"),$excel,$svd_defective*1,"true",$ExWs);		
+	addContent(setRange("H39","I39"),$excel,$sjt_defective,"true",$ExWs);
+	addContent(setRange("J39","K39"),$excel,$svt_defective,"true",$ExWs);
 
-	addContent(setRange("K40","K40"),$excel,$sjt_discrep,"true",$ExWs);
-	addContent(setRange("L40","L40"),$excel,$sjd_discrep,"true",$ExWs);
-	addContent(setRange("M40","M40"),$excel,$svt_discrep,"true",$ExWs);
-	addContent(setRange("N40","N40"),$excel,$svd_discrep,"true",$ExWs);		
+	addContent(setRange("H40","I40"),$excel,$sjt_label,"true",$ExWs);
+	addContent(setRange("J40","K40"),$excel,$svt_label,"true",$ExWs);
 	}
 	
+
+
+
 	$sql="select * from logbook where date='".$dsrDate."' and station='".$station."' order by field(revenue,'open','close'),field(shift,3,1,2)";
 
 //$sql="select * from logbook where date='".$dsrDate."' and station='".$station."' order by shift";
 
 $rs=$db->query($sql);
 $nm=$rs->num_rows;
-
+/*
 $sjt_sales=0;
 $sjd_sales=0;
 $svt_sales=0;
 $svd_sales=0;
-
+*/
 $fare_adjustment=0;
 $ot_amount=0;
 $unreg_sale=0;
-
+$tvm_refund=0;
 $discount=0;
 $refund=0;
 
@@ -1212,6 +1312,34 @@ if($nmAlt>0){
 	$nm++;
 }
 */
+	$extSQL="select * from extension where station='".$stationStamp."'";
+	$extRS=$db->query($extSQL);
+	$extNM=$extRS->num_rows;
+
+	if($extNM>0){
+		$extRow=$extRS->fetch_assoc();
+		$extensionStamp=$extRow['extension'];
+
+	}
+
+$svc_add_value=0;
+$svc_issuance_fee=0;
+
+$sjt_sales['reg']=0;
+$sjt_sales['disc']=0;
+$sjt_sales['pwd']=0;
+
+$svt_sales['add_value']=0;
+
+$svt_sales['bpi']=0;
+$svt_sales['concessionary']=0;
+$svt_sales['globe']=0;
+$svt_sales['smart']=0;
+
+
+
+$svt_sales['issuance_fee']=0;
+
 
 for($i=0;$i<$nm;$i++){
 
@@ -1219,34 +1347,65 @@ for($i=0;$i<$nm;$i++){
 	$row=$rs->fetch_assoc();
 	$log_id=$row['id'];
 
-	$sql2="select * from control_sales_amount inner join control_remittance on control_sales_amount.control_id=control_remittance.control_id where remit_log='".$log_id."'";
+	$sql2="select * from control_sales_amount inner join control_remittance on control_sales_amount.control_id=control_remittance.control_id where  source_type='pos' and ticket_type='sjt' and remit_log='".$log_id."' and station in ('".$stationStamp."','".$extensionStamp."')";
 	$rs2=$db->query($sql2);
 	$nm2=$rs2->num_rows;	
 	for($k=0;$k<$nm2;$k++){
 		$row2=$rs2->fetch_assoc();
-		$sjt_sales+=$row2['sjt']*1;		
-		$svt_sales+=$row2['svt']*1;
-		$sjd_sales+=$row2['sjd']*1;
-		$svd_sales+=$row2['svd']*1;
+		$sjt_sales[$row2['value_type']]+=$row2['amount']*1;		
+		//$svt_sales[$row2['source_type']]+=$row2['svt']*1;
 			
 	}
 
-	$sql2="select sum(sjt+sjd+svt+svd+c+ot) as fare_adjustment from fare_adjustment inner join control_remittance on fare_adjustment.control_id=control_remittance.control_id where remit_log='".$log_id."'";
+	$sql2="select * from control_sales_amount inner join control_remittance on control_sales_amount.control_id=control_remittance.control_id where  source_type='pos' and ticket_type='svc' and remit_log='".$log_id."' and station in ('".$stationStamp."','".$extensionStamp."')";
+	$rs2=$db->query($sql2);
+	$nm2=$rs2->num_rows;	
+	for($k=0;$k<$nm2;$k++){
+		$row2=$rs2->fetch_assoc();
+		$svt_sales[$row2['value_type']]+=$row2['amount']*1;		
+		//$svt_sales[$row2['source_type']]+=$row2['svt']*1;
+			
+	}
+
+
+	$fareSQL="select * from fare_adjustment inner join control_remittance on fare_adjustment.control_id=control_remittance.control_id where remit_log='".$log_id."'";
+
+
+//	$fareSQL="select * from fare_adjustment inner join control_remittance on fare_adjustment.control_id=control_remittance.control_id where remit_log='".$log_id."' and station='".$stationStamp."' and remit_ticket_seller='".$row2['remit_ticket_seller']."' and unit='".$unit."'";
+
+	$fareRS=$db->query($fareSQL);
+	$fareNM=$fareRS->num_rows;
+	for($n=0;$n<$fareNM;$n++){
+		$fareRow=$fareRS->fetch_assoc();
+		$fare_adjustment+=$fareRow['sjt']+$fareRow['sjd']+$fareRow['svt']+$fareRow['svd']+$fareRow['c']+$fareRow['pwd']+$fareRow['mismatch'];
+		$ot_amount+=$fareRow['ot'];
+	}
+/*
+	$sql2="select (sjt+sjd+svt+pwd+c+ot+mismatch) as fare_adjustment from fare_adjustment inner join control_remittance on fare_adjustment.control_id=control_remittance.control_id where  remit_log='".$log_id."'";
 
 	$rs2=$db->query($sql2);
 	$nm2=$rs2->num_rows;	
 	for($k=0;$k<$nm2;$k++){
 		$row2=$rs2->fetch_assoc();
 		$fare_adjustment+=$row2['fare_adjustment'];
-	}	
 	
-	$sql2="select sum(sj+sv) as unreg_sale from unreg_sale inner join control_remittance on unreg_sale.control_id=control_remittance.control_id where remit_log='".$log_id."'";
+	
+	
+	
+	}	
+	*/
+//	$sql2="select sum(sj+sv) as unreg_sale from unreg_sale inner join control_remittance on unreg_sale.control_id=control_remittance.control_id where remit_log='".$log_id."'";
+	$sql2="select (sj+sv) as unreg_sale,issuance_fee from unreg_sale inner join control_remittance on unreg_sale.control_id=control_remittance.control_id where remit_log='".$log_id."'";
+
 	$rs2=$db->query($sql2);
 	$nm2=$rs2->num_rows;	
 	for($k=0;$k<$nm2;$k++){
 		$row2=$rs2->fetch_assoc();
 		$unreg_sale+=$row2['unreg_sale'];
+		$issuance_unreg=$row2['issuance_fee'];
+
 	}		
+
 
 
 	$sql2="select sum(ot) as ot from control_cash inner join control_remittance on control_cash.control_id=control_remittance.control_id where remit_log='".$log_id."' group by type";
@@ -1254,8 +1413,23 @@ for($i=0;$i<$nm;$i++){
 	$nm2=$rs2->num_rows;	
 	for($k=0;$k<$nm2;$k++){
 		$row2=$rs2->fetch_assoc();
-		$ot_amount+=$row2['ot'];
+		//$ot_amount+=$row2['ot'];
+		
+		
+		
+		
 	}	
+
+	$sql2="select sum(tvm_refund) as tvm_refund from control_cash inner join control_remittance on control_cash.control_id=control_remittance.control_id  where remit_log='".$log_id."' and station='".$stationStamp."'";
+	$rs2=$db->query($sql2);
+	$nm2=$rs2->num_rows;	
+	for($k=0;$k<$nm2;$k++){
+		$row2=$rs2->fetch_assoc();
+		$tvm_refund+=$row2['tvm_refund'];
+	}		
+
+
+	
 	
 	$sql2="select sum(sj+sv) as discount from discount inner join control_remittance on discount.control_id=control_remittance.control_id where remit_log='".$log_id."'";
 	$rs2=$db->query($sql2);
@@ -1265,7 +1439,7 @@ for($i=0;$i<$nm;$i++){
 		$discount+=$row2['discount'];
 	}		
 	
-	$sql2="select sum(sj_amount+sv_amount) as refund from refund inner join control_remittance on refund.control_id=control_remittance.control_id where remit_log='".$log_id."'";
+	$sql2="select sum(sj_amount+tvm) as refund from refund inner join control_remittance on refund.control_id=control_remittance.control_id where remit_log='".$log_id."'";
 	$rs2=$db->query($sql2);
 	$nm2=$rs2->num_rows;	
 	for($k=0;$k<$nm2;$k++){
@@ -1275,21 +1449,46 @@ for($i=0;$i<$nm;$i++){
 	
 }
 
-$grandTotal+=$sjt_sales;
-$grandTotal+=$sjd_sales;
-$grandTotal+=$svt_sales;
-$grandTotal+=$svd_sales;
+$grandTotal+=$sjt_sales['reg'];
+$grandTotal+=$sjt_sales['pwd'];
+$grandTotal+=$sjt_sales['disc'];
 
 $grandTotal+=$fare_adjustment;
 $grandTotal+=$ot_amount;
+$grandTotal+=$tvm_refund;
+
+
 $grandTotal+=$unreg_sale;
 
 $unreg_deduction=$unreg_sale;
 
-$deductionsTotal+=$discount;
+//$deductionsTotal+=$discount;
 $deductionsTotal+=$refund;
 
+
+
+
+
+$svc_add_value+=$svt_sales['add_value'];
+
+$svc_add_value+=$svt_sales['bpi'];
+$svc_add_value+=$svt_sales['concessionary'];
+$svc_add_value+=$svt_sales['globe'];
+$svc_add_value+=$svt_sales['smart'];
+
+
+$svc_issuance_fee+=$svt_sales['issuance_fee'];
+
+
+
+
+
+
+
+
 $netSales=$grandTotal-$deductionsTotal;
+
+$for_deposit=$netSales;
 
 $sql="select * from logbook where date='".$dsrDate."' and station='".$station."' order by field(revenue,'open','close'),field(shift,3,1,2)";
 //$sql="select * from logbook where date='".$dsrDate."' and station='".$station."' order by shift";
@@ -1307,10 +1506,13 @@ if($nmAlt>0){
 }
 */
 
-/*
 $cash_beginning=0;
 $revolving_fund=0;
-$for_deposit=0;
+$sjt_net_revenue=0;
+$svc_net_revenue=0;
+//$svc_issuance_fee=0;
+
+
 $subtotal=0;
 $pnb_deposit_c['sjt']=0;
 $pnb_deposit_p['sjt']=0;
@@ -1335,7 +1537,12 @@ for($i=0;$i<$nm;$i++){
 		$rs2=$db->query($sql2);
 		$row2=$rs2->fetch_assoc();
 	//	$cash_beginning=$row2['revolving_fund']+$row2['for_deposit'];
-		$cash_beginning=$row2['for_deposit'];
+		$cash_beginning=$row2['sjt_net_revenue'];
+
+		$svc_net_revenue=$row2['svc_net_revenue'];
+		//$svc_issuance_fee=$row2['svc_issuance_fee'];
+
+
 		$revolving_fund=$row2['revolving_fund'];		
 	}
 	else {
@@ -1372,21 +1579,26 @@ for($i=0;$i<$nm;$i++){
 		
 	}
 
+*/
 	
-	$sql2="select sum(amount) as deposit from pnb_deposit where log_id='".$log_id."' and type='current'";
+	$sql2="select sum(amount) as deposit,account_type from pnb_deposit where log_id='".$log_id."' and type='current' group by account_type";
 	$rs2=$db->query($sql2);
 	$nm2=$rs2->num_rows;			
 	if($nm2>0){
-		$row2=$rs2->fetch_assoc();
-		$pnb_deposit_c[$row2['account_type']]+=$row2['deposit'];
+		for($i=0;$i<$nm2;$i++){
+			$row2=$rs2->fetch_assoc();
+			$pnb_deposit_c[$row2['account_type']]+=$row2['deposit'];
+		}
 	}	
 	
-	$sql2="select sum(amount) as deposit from pnb_deposit where log_id='".$log_id."' and type='previous'";
+	$sql2="select sum(amount) as deposit,account_type from pnb_deposit where log_id='".$log_id."' and type='previous' group by account_type";
 	$rs2=$db->query($sql2);
 	$nm2=$rs2->num_rows;			
 	if($nm2>0){
-		$row2=$rs2->fetch_assoc();
-		$pnb_deposit_p[$row2['account_type']]+=$row2['deposit'];
+		for($i=0;$i<$nm2;$i++){
+			$row2=$rs2->fetch_assoc();
+			$pnb_deposit_p[$row2['account_type']]+=$row2['deposit'];
+		}
 	}	
 	
 	$sql2="select sum(if(type='overage',amount,0)) as overage,sum(if(type='shortage',amount,0)) as shortage	from discrepancy where log_id='".$log_id."'";
@@ -1420,36 +1632,80 @@ for($i=0;$i<$nm;$i++){
 	}	
 	$unpaid_shortage-=$paid_shortage;	
 }	
-	$subtotal=$for_deposit+$revolving_fund+$cash_beginning;	
-	$deposit_total=$pnb_deposit_c+$pnb_deposit_p;
+
+	$subtotal=$for_deposit+$cash_beginning;	
+
+	$subtotal_svc=$svc_net_revenue+$svc_add_value+$svc_issuance_fee;
+
+	$deposit_total=$pnb_deposit_c['sjt']+$pnb_deposit_p['sjt'];
+
+	$deposit_total_svc=$pnb_deposit_c['svc']+$pnb_deposit_p['svc'];
+
+
 	$subtotal_2=$subtotal-$deposit_total;
+	$subtotal_2_svc=$subtotal_svc-$deposit_total_svc;
+	
+
+
 	//$overage-=$unreg_deduction;
 	$overage=$overage;
-	$cash_ending=$subtotal_2+$overage-$unpaid_shortage;	
+	$cash_ending=$subtotal_2+$overage-$unpaid_shortage;
+
+	$cash_ending_svc=$subtotal_2_svc;
+	$grand_total_sales=$cash_ending*1+$cash_ending_svc*1;
+
+	$final_balance=$grand_total_sales;
+	$final_balance+=$revolving_fund;
+
+
+
+
 	if(isset($_GET['ext'])){
 	}
 	else {
-		addContent(setRange("V32","Y32"),$excel,$cash_beginning,"true",$ExWs);
-		addContent(setRange("V33","Y33"),$excel,$revolving_fund,"true",$ExWs);
-		addContent(setRange("V34","Y34"),$excel,$for_deposit,"true",$ExWs);
-
-		addContent(setRange("V36","Y36"),$excel,$pnb_deposit_c['sjt'],"true",$ExWs);
-		addContent(setRange("V37","Y37"),$excel,$pnb_deposit_p['sjt'],"true",$ExWs);
-
-		addContent(setRange("V38","Y38"),$excel,$pnb_deposit_c['svc'],"true",$ExWs);
-		addContent(setRange("V39","Y39"),$excel,$pnb_deposit_p['svc'],"true",$ExWs);
+		addContent(setRange("R32","U32"),$excel,$cash_beginning,"true",$ExWs);
 
 
+		addContent(setRange("V32","Z32"),$excel,$svc_net_revenue,"true",$ExWs);
 
-		addContent(setRange("V40","Y40"),$excel,$overage,"true",$ExWs);
-		addContent(setRange("V41","Y41"),$excel,$unpaid_shortage,"true",$ExWs);
+		addContent(setRange("R33","U33"),$excel,$for_deposit,"true",$ExWs);
+
+
+		addContent(setRange("V34","Z34"),$excel,$svc_add_value,"true",$ExWs);
+
+		addContent(setRange("V35","Z35"),$excel,$svc_issuance_fee,"true",$ExWs);
+		
+		
+//		addContent(setRange("V34","Z34"),$excel,"=J".$grandRowCount,"true",$ExWs);
+
+//		addContent(setRange("V35","Z35"),$excel,"=I".$grandRowCount."+N".$grandRowCount,"true",$ExWs);
+
+
+
+
+		addContent(setRange("R37","U37"),$excel,$pnb_deposit_c['sjt'],"true",$ExWs);
+
+		addContent(setRange("V38","Z38"),$excel,$pnb_deposit_c['svc'],"true",$ExWs);
+
+
+
+		addContent(setRange("R39","U39"),$excel,$pnb_deposit_p['sjt'],"true",$ExWs);
+
+		addContent(setRange("V40","Z40"),$excel,$pnb_deposit_p['svc'],"true",$ExWs);
+
+
+
+		addContent(setRange("R42","U42"),$excel,$overage,"true",$ExWs);
+		addContent(setRange("R43","U43"),$excel,$unpaid_shortage,"true",$ExWs);
 	
+
+		addContent(setRange("AA45","AC45"),$excel,$revolving_fund,"true",$ExWs);
+
 	
 	}
 	
 	
 	
-	*/
 	
 	save($ExWb,$excel,$newFilename); 	
 	echo "DSR printout has been generated!  Press right click and Save As: <a href='".$newFilename."'>Here</a>";

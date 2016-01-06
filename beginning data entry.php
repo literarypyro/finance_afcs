@@ -23,12 +23,12 @@ $log_id=$_GET['loID'];
 			$searchNM=$searchRS->num_rows;
 			
 			if($searchNM>0){
-			$update="update beginning_balance_cash set revolving_fund='".$_POST['revolving']."',sjt_net_revenue='".$_POST['sjt_net_revenue']."',svc_net_revenue='".$_POST['svc_net_revenue']."' where log_id='".$_POST['log_id']."'";
+			$update="update beginning_balance_cash set revolving_fund='".$_POST['revolving']."',sjt_net_revenue='".$_POST['sjt_net_revenue']."',svc_net_revenue='".$_POST['svc_net_revenue']."',svc_issuance_fee='".$_POST['svc_issuance_fee']."' where log_id='".$_POST['log_id']."'";
 			$rs=$db->query($update);	
 			
 			}
 			else {
-			$update="insert into beginning_balance_cash(revolving_fund,sjt_net_revenue,svc_net_revenue,log_id) values ('".$_POST['revolving']."','".$_POST['sjt_net_revenue']."','".$_POST['svc_net_revenue']."','".$_POST['log_id']."')";
+			$update="insert into beginning_balance_cash(revolving_fund,sjt_net_revenue,svc_net_revenue,svc_issuance_fee,log_id) values ('".$_POST['revolving']."','".$_POST['sjt_net_revenue']."','".$_POST['svc_net_revenue']."','".$_POST['svc_issuance_fee']."','".$_POST['log_id']."')";
 
 			$rs=$db->query($update);	
 			
@@ -48,6 +48,21 @@ $log_id=$_GET['loID'];
 			$rs=$db->query($update);	
 			
 			}
+			
+			
+			$search="select * from beginning_balance_svt where log_id='".$_POST['log_id']."'";
+			$searchRS=$db->query($search);
+			$searchNM=$searchRS->num_rows;
+			
+			if($searchNM>0){
+			$update="update beginning_balance_svt set svt='".$_POST['svt']."',svd='".$_POST['svd']."',svt_loose='".$_POST['svt_loose']."',svd_loose='".$_POST['svd_loose']."' where log_id='".$_POST['log_id']."'";
+			$rs=$db->query($update);
+			}
+			else {
+			$update="insert into beginning_balance_svt(svt,svd,svt_loose,svd_loose,log_id) values ('".$_POST['svt']."','".$_POST['svd']."','".$_POST['svt_loose']."','".$_POST['svd_loose']."','".$_POST['log_id']."')";
+			$rs=$db->query($update);
+			
+			}			
 		}
 		else if($beginning_type=="sv"){
 			$search="select * from beginning_balance_svt where log_id='".$_POST['log_id']."'";
@@ -105,7 +120,12 @@ if($type=="cash"){
 	<td class='subheader'>SVC Net Revenue</td>
 	<td class='category'><input type=text name='svc_net_revenue' /></td>
 </tr>
-
+<!--
+<tr>
+	<td class='subheader'>SVC Issuance Fee</td>
+	<td class='category'><input type=text name='svc_issuance_fee' /></td>
+</tr>
+-->
 <?php
 }
 else if($type=="sj"){
@@ -118,6 +138,16 @@ else if($type=="sj"){
 <tr>
 	<td class='subheader'>SJT Loose</td>
 	<td class='category'><input type=text name='sjt_loose' /></td>
+
+</tr>
+<tr>
+	<td class='subheader'>SVT</td>
+	<td class='grid'><input type=text name='svt' /></td>
+
+</tr>
+<tr>
+	<td class='subheader'>SVT Loose</td>
+	<td class='category'><input type=text name='svt_loose' /></td>
 
 </tr>
 

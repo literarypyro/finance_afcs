@@ -120,10 +120,10 @@ if($extAvNM>0){
 <th rowspan=2>Name of Ticket Seller</th>
 <th rowspan=2>Id No.</th>
 
-<th colspan=2>Unreg Sale</th>
-<th colspan=2>Discount</th>
-<th colspan=4>Refund</th>
+<th colspan=3>Lost</th>
+<th colspan=2>Refund</th>
 
+<th colspan=2>TVM Refund</th>
 <th rowspan=2>Overage</th>
 <th colspan=2>Shortage</th>
 <th rowspan=2>&nbsp;</th>
@@ -133,9 +133,9 @@ if($extAvNM>0){
 <tr class='subheader'>
 <th>SJ</th>
 <th>SV</th>
+<th>Issuance Fee</th>
 
-<th>SJ</th>
-<th>SV</th>
+
 
 <th>SJ</th>
 <th>Amt.</th>
@@ -175,6 +175,8 @@ for($i=0;$i<$nm;$i++){
 
 	$subtotal['sj_unreg']=0; 
 	$subtotal['sv_unreg']=0; 
+	$subtotal['issuance_unreg']=0; 
+
 	$subtotal['sj_discount']=0; 
 	$subtotal['sv_discount']=0; 
 	$subtotal['sj_refund']=0; 
@@ -234,11 +236,13 @@ for($i=0;$i<$nm;$i++){
 			
 			$sj_unreg=0;
 			$sv_unreg=0;
+			$issuance_unreg=0;
 			
 			for($m=0;$m<$unregNM;$m++){
 				$unregRow=$unregRS->fetch_assoc();
 				$sj_unreg+=$unregRow['sj']*1;
 				$sv_unreg+=$unregRow['sv']*1;
+				$issuance_unreg+=$unregRow['issuance_fee']*1;
 			
 			}
 			
@@ -258,7 +262,7 @@ for($i=0;$i<$nm;$i++){
 			
 			}			
 			
-			$refundSQL="select sj_amount,sv_amount,sj,sv from refund  where control_id='".$row2['control_id']."'";
+			$refundSQL="select sj_amount,sv_amount,sj,sv,tvm from refund  where control_id='".$row2['control_id']."'";
 
 			$refundRS=$db->query($refundSQL);
 			$refundNM=$refundRS->num_rows;
@@ -274,7 +278,7 @@ for($i=0;$i<$nm;$i++){
 				$sv_refund+=$refundRow['sv']*1;
 
 				$sj_r_amount+=$refundRow['sj_amount']*1;
-				$sv_r_amount+=$refundRow['sv_amount']*1;
+				$sv_r_amount+=$refundRow['tvm']*1;
 			}			
 			
 			$cashSQL="select sum(if(discrepancy.type='overage',amount,0)) as overage,sum(if(discrepancy.type='shortage',amount,0)) as unpaid_shortage from discrepancy inner join cash_transfer on discrepancy.transaction_id=cash_transfer.transaction_id where discrepancy.log_id='".$log_id."' and discrepancy.ticket_seller='".$row2['remit_ticket_seller']."' and cash_transfer.station='".$stationStamp."' and cash_transfer.unit='".$unit."'";
@@ -311,6 +315,9 @@ for($i=0;$i<$nm;$i++){
 			
 			$subtotal['sj_unreg']+=$sj_unreg; 
 			$subtotal['sv_unreg']+=$sv_unreg; 
+			$subtotal['issuance_unreg']+=$issuance_unreg; 
+
+
 			$subtotal['sj_discount']+=$sj_discount; 
 			$subtotal['sv_discount']+=$sv_discount; 
 			$subtotal['sj_refund']+=$sj_refund; 
@@ -339,8 +346,9 @@ for($i=0;$i<$nm;$i++){
 			<td><?php echo $ticket_id; ?></td>		
 			<td align=right><?php echo number_format($sj_unreg*1,2); ?></td>
 			<td align=right><?php echo number_format($sv_unreg*1,2); ?></td>
-			<td align=right><?php echo number_format($sj_discount*1,2); ?></td>
-			<td align=right><?php echo number_format($sv_discount*1,2); ?></td>
+			<td align=right><?php echo number_format($sv_unreg*1,2); ?></td>
+
+
 
 			<td align=right><?php echo $sj_refund; ?></td>
 			<td align=right><?php echo number_format($sj_r_amount*1,2); ?></td>
@@ -362,6 +370,9 @@ for($i=0;$i<$nm;$i++){
 		if($nm2>0){
 			$grandtotal['sj_unreg']+=$subtotal['sj_unreg']; 
 			$grandtotal['sv_unreg']+=$subtotal['sv_unreg']; 
+			$grandtotal['issuance_unreg']+=$subtotal['issuance_unreg']; 
+
+
 			$grandtotal['sj_discount']+=$subtotal['sj_discount']; 
 			$grandtotal['sv_discount']+=$subtotal['sv_discount']; 
 			$grandtotal['sj_refund']+=$subtotal['sj_refund']; 
@@ -384,8 +395,8 @@ for($i=0;$i<$nm;$i++){
 
 			<td align=right><font><?php echo number_format($subtotal['sj_unreg']*1,2); ?></font></td> 
 			<td align=right><font><?php echo number_format($subtotal['sv_unreg']*1,2); ?></font></td> 
-			<td align=right><font><?php echo number_format($subtotal['sj_discount']*1,2); ?></font></td> 
-			<td align=right><font><?php echo number_format($subtotal['sv_discount']*1,2); ?></font></td> 
+			<td align=right><font><?php echo number_format($subtotal['sv_unreg']*1,2); ?></font></td> 
+
 			<td align=right><font><?php echo $subtotal['sj_refund']; ?></font></td> 
 
 			<td align=right><font><?php echo number_format($subtotal['sj_r_amount']*1,2); ?></font></td> 
@@ -416,8 +427,8 @@ for($i=0;$i<$nm;$i++){
 		<th colspan=3>Grand Total</th>
 		<td align=right><font><?php echo number_format($grandtotal['sj_unreg']*1,2); ?></font></td> 
 		<td align=right><font><?php echo number_format($grandtotal['sv_unreg']*1,2); ?></font></td> 
-		<td align=right><font><?php echo number_format($grandtotal['sj_discount']*1,2); ?></font></td> 
-		<td align=right><font><?php echo number_format($grandtotal['sv_discount']*1,2); ?></font></td> 
+		<td align=right><font><?php echo number_format($grandtotal['issuance_unreg']*1,2); ?></font></td> 
+
 		<td align=right><font><?php echo $grandtotal['sj_refund']; ?></font></td> 
 		<td align=right><font><?php echo number_format($grandtotal['sj_r_amount']*1,2); ?></font></td> 
 

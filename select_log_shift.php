@@ -584,7 +584,7 @@ else if(($time>=2000)||($time<600)){
 	<select name='station' id='station'>
 	<?php
 	$db=retrieveDb();
-	$sql="select * from station where id='9' order by id*1";
+	$sql="select * from station where id='4' order by id*1";
 	$rs=$db->query($sql);
 	$nm=$rs->num_rows;
 	for($i=0;$i<$nm;$i++){

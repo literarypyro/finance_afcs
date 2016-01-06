@@ -129,37 +129,39 @@ if(isset($_POST['adjustment_control_id_a'])){
 	$db=retrieveDb();
 	
 //	$fare_adjustment=$_POST['adjustment_1'];
-	$sjt_adjustment=$_POST['adjustment_2'];
-	$sjd_adjustment=$_POST['adjustment_3'];
-	$svt_adjustment=$_POST['adjustment_4'];
-	$svd_adjustment=$_POST['adjustment_5'];
-	$c_adjustment=$_POST['adjustment_6'];
+//	$sjt_adjustment=$_POST['adjustment_2'];
+//	$sjd_adjustment=$_POST['adjustment_3'];
+//	$svt_adjustment=$_POST['adjustment_4'];
+//	$svd_adjustment=$_POST['adjustment_5'];
+//	$c_adjustment=$_POST['adjustment_6'];
 	$ot_adjustment=$_POST['adjustment_7'];
-
+	$mismatch_adjustment=$_POST['adjustment_6'];
+/*
 	$sjt_adjustment_t=$_POST['adjustment_tickets_2'];
 	$sjd_adjustment_t=$_POST['adjustment_tickets_3'];
 	$svt_adjustment_t=$_POST['adjustment_tickets_4'];
 	$svd_adjustment_t=$_POST['adjustment_tickets_5'];
 	$c_adjustment_t=$_POST['adjustment_tickets_6'];
 	$ot_adjustment_t=$_POST['adjustment_tickets_7'];
-
+*/
 
 	
 	$sql="select * from fare_adjustment where control_id='".$control_id."'";
 	$rs=$db->query($sql);
 	$nm=$rs->num_rows;
 	if($nm==0){
-		$sql="insert into fare_adjustment(control_id,sjt,sjd,svt,svd,c,ot) values ";
-		$sql.="('".$control_id."','".$sjt_adjustment."','".$sjd_adjustment."','".$svt_adjustment."','".$svd_adjustment."','".$c_adjustment."','".$ot_adjustment."')";
+		$sql="insert into fare_adjustment(control_id,sjt,sjd,svt,svd,c,ot,mismatch) values ";
+		$sql.="('".$control_id."','".$sjt_adjustment."','".$sjd_adjustment."','".$svt_adjustment."','".$svd_adjustment."','".$c_adjustment."','".$ot_adjustment."','".$mismatch_adjustment."')";
 		$rs=$db->query($sql);
 
 	}	
 	else {
-		$sql="update fare_adjustment set c='".$c_adjustment."',ot='".$ot_adjustment."',sjt='".$sjt_adjustment."',sjd='".$sjd_adjustment."',svt='".$svt_adjustment."',svd='".$svd_adjustment."' where control_id='".$control_id."'";
+		$sql="update fare_adjustment set c='".$c_adjustment."',ot='".$ot_adjustment."',sjt='".$sjt_adjustment."',sjd='".$sjd_adjustment."',svt='".$svt_adjustment."',svd='".$svd_adjustment."',mismatch='".$mismatch_adjustment."' where control_id='".$control_id."'";
 		$rs=$db->query($sql);	
 	
 	
 	}
+	/*
 
 	$sql="select * from fare_adjustment_tickets where control_id='".$control_id."'";
 	$rs=$db->query($sql);
@@ -174,7 +176,7 @@ if(isset($_POST['adjustment_control_id_a'])){
 		$sql="update fare_adjustment_tickets set c='".$c_adjustment_t."',ot='".$ot_adjustment_t."',sjt='".$sjt_adjustment_t."',sjd='".$sjd_adjustment_t."',svt='".$svt_adjustment_t."',svd='".$svd_adjustment_t."' where control_id='".$control_id."'";
 		$rs=$db->query($sql);	
 	}
-
+	*/
 
 	$_SESSION['control_id']=$control_id;
 
@@ -193,22 +195,28 @@ if(isset($_POST['adjustments_2_control_id'])){
 	$overage=$_POST['addition_2'];
 	$unpaid_shortage=$_POST['deduction_2'];
 	
+
+
 	$ot_amount=$_POST['addition_3'];
 	
 	$refund_sj=$_POST['refund_sj'];
 	$refund_sv=$_POST['refund_sv'];	
 	
 	$refund_sj_amount=$_POST['refund_sj_amount'];
-	$refund_sv_amount=$_POST['refund_sv_amount'];	
+	$refund_sv_amount=$_POST['refund_tvm_amount'];	
 
-	
+	$issuance_fee="";
+	$tvm_refund=$_POST['tvm_refund_cash'];
+
+	$issuance_unreg=$_POST['issuance_fee'];
+
+
 	
 	$unreg_sj=$_POST['unreg_sj'];
 	$unreg_sv=$_POST['unreg_sv'];
 	
 	$discount_sj=$_POST['discount_sj'];
 	$discount_sv=$_POST['discount_sv'];	
-
 	
 	$sql="select * from control_slip where id='".$control_id."'";
 	$rs=$db->query($sql);
@@ -220,27 +228,29 @@ if(isset($_POST['adjustments_2_control_id'])){
 	$rs=$db->query($sql);
 	$nm=$rs->num_rows;
 	if($nm==0){
-		$update="insert into refund(control_id,sj,sv,sj_amount,sv_amount) values ('".$control_id."','".$refund_sj."','".$refund_sv."','".$refund_sj_amount."','".$refund_sv_amount."')";
+		$update="insert into refund(control_id,sj,sv,sj_amount,tvm) values ('".$control_id."','".$refund_sj."','".$refund_sv."','".$refund_sj_amount."','".$refund_sv_amount."')";
 		$updateRS=$db->query($update);
 
 	}
 	else {
 		$row=$rs->fetch_assoc();
-		$update="update refund set sj='".$refund_sj."',sv='".$refund_sv."',sj_amount='".$refund_sj_amount."',sv_amount='".$refund_sv_amount."' where id='".$row['id']."'";
+		$update="update refund set sj='".$refund_sj."',sv='".$refund_sv."',sj_amount='".$refund_sj_amount."',tvm='".$refund_sv_amount."' where id='".$row['id']."'";
 		$updateRS=$db->query($update);
 	}	
 	
+	
+
 	
 	$sql="select * from unreg_sale where control_id='".$control_id."'";
 	$rs=$db->query($sql);
 	$nm=$rs->num_rows;
 	if($nm==0){
-		$update="insert into unreg_sale(control_id,sj,sv) values ('".$control_id."','".$unreg_sj."','".$unreg_sv."')";
+		$update="insert into unreg_sale(control_id,sj,sv,issuance_fee) values ('".$control_id."','".$unreg_sj."','".$unreg_sv."','".$issuance_unreg."')";
 		$updateRS=$db->query($update);
 	}
 	else {
 		$row=$rs->fetch_assoc();
-		$update="update unreg_sale set sj='".$unreg_sj."',sv='".$unreg_sv."' where id='".$row['id']."'";
+		$update="update unreg_sale set sj='".$unreg_sj."',sv='".$unreg_sv."',issuance_fee='".$issuance_unreg."' where id='".$row['id']."'";
 		$updateRS=$db->query($update);
 	}
 	
@@ -265,12 +275,16 @@ if(isset($_POST['adjustments_2_control_id'])){
 	$nm=$rs->num_rows;
 	
 	if($nm==0){
-		$sql="insert into control_cash(control_id,unpaid_shortage,overage,cash_advance) values ";
-		$sql.="('".$control_id."','".$unpaid_shortage."','".$overage."','".$cash_advance."')";
+
+
+		$sql="insert into control_cash(control_id,unpaid_shortage,overage,cash_advance,issuance_fee,tvm_refund) values ";
+		$sql.="('".$control_id."','".$unpaid_shortage."','".$overage."','".$cash_advance."','".$issuance_fee."','".$tvm_refund."')";
+		
 		$rs=$db->query($sql);
 	}	
 	else {
-		$sql="update control_cash set unpaid_shortage='".$unpaid_shortage."',overage='".$overage."',cash_advance='".$cash_advance."' where control_id='".$control_id."'";
+		$sql="update control_cash set unpaid_shortage='".$unpaid_shortage."',overage='".$overage."',cash_advance='".$cash_advance."',issuance_fee='".$issuance_fee."',tvm_refund='".$tvm_refund."' where control_id='".$control_id."'";
+		
 		$rs=$db->query($sql);	
 	}	
 
@@ -369,23 +383,18 @@ if(isset($_POST['ticket_control_id'])){
 
 	$db=retrieveDb();
 
-		$source[0]='pos';
-		$source[1]='tim_a';
-		$source[2]='tim_b';
-		$source[3]='tim_c';
-		$source[4]='tim_d';
-
-	for($k=0;$k<count($source);$k++){
-		$sjt_amount[$source[$k]]=$_POST[$source[$k].'_sjt_amount'];
-		$svt_amount[$source[$k]]=$_POST[$source[$k].'_svt_amount'];
-		
-		$sjt_total[$source[$k]]=$_POST[$source[$k].'_sjt_total'];
-		$svt_total[$source[$k]]=$_POST[$source[$k].'_svt_total'];
+	$sjt_amount=$_POST['sjt_amount'];
+	$sjd_amount=$_POST['sjd_amount'];
+	$svt_amount=$_POST['svt_amount'];
+	//$svd_amount=$_POST['svd_amount'];
+	$svt_add_value=$_POST['svt_add_value'];
 
 
-
-	}	
-
+	
+	$sjt_total=$_POST['sjt_total'];
+	$sjd_total=$_POST['sjd_total'];
+	$svt_total=$_POST['svt_total'];
+	$svd_total=$_POST['svd_total'];
 	
 	
 	$controlSQL="select * from control_slip where id='".$control_id."'";
@@ -396,38 +405,81 @@ if(isset($_POST['ticket_control_id'])){
 
 	
 	if($_POST['type_transact']=="ticket_amount"){
+		$sql="select * from control_sales_amount where control_id='".$control_id."' and source_type='pos' and ticket_type='svc' and value_type='issuance_fee'";
+		$rs=$db->query($sql);
+		$nm=$rs->num_rows;
 		
-		$source[0]='pos';
-		$source[1]='tim_a';
-		$source[2]='tim_b';
-		$source[3]='tim_c';
-		$source[4]='tim_d';
-
-
-
-		for($k=0;$k<count($source);$k++){
-
-			$sql="select * from control_sales_amount where control_id='".$control_id."' and source_type='".$source[$k]."'";
+		if($nm==0){
+			$sql="insert into control_sales_amount(control_id,source_type,ticket_type,value_type,amount) values ";
+			$sql.="('".$control_id."','pos','svc','issuance_fee','".$svt_amount."')";
 			$rs=$db->query($sql);
-			$nm=$rs->num_rows;
-			
-			if($nm==0){
-				$sql="insert into control_sales_amount(control_id,sjt,svt,source_type) values ";
-				$sql.="('".$control_id."','".$sjt_amount[$source[$k]]."','".$svt_amount[$source[$k]]."','".$source[$k]."')";
-				
-				$rs=$db->query($sql);	
-
-
-			}	
-			else {
-				$sql="update control_sales_amount set sjt='".$sjt_amount[$source[$k]]."',svt='".$svt_amount[$source[$k]]."' where control_id='".$control_id."' and source_type='".$source[$k]."'";
-				$rs=$db->query($sql);	
-			}
-
-//			$discount_sj=number_format($sjd_amount*.20,2);
-//			$discount_sv=number_format($svd_amount*.20,2);	
-
+		}	
+		else {
+			$row=$rs->fetch_assoc();
+			$sql="update control_sales_amount set amount='".$svt_amount."' where id='".$row['id']."'";
+			$rs=$db->query($sql);	
 		}
+
+
+
+
+		$sql="select * from control_sales_amount where control_id='".$control_id."' and source_type='pos' and ticket_type='svc' and value_type='add_value'";
+		$rs=$db->query($sql);
+		$nm=$rs->num_rows;
+		
+		if($nm==0){
+			$sql2="insert into control_sales_amount(control_id,source_type,ticket_type,value_type,amount) values ";
+			$sql2.="('".$control_id."','pos','svc','add_value','".$svt_add_value."')";
+			$rs2=$db->query($sql2);
+		}	
+		else {
+			$row=$rs->fetch_assoc();
+			$sql2="update control_sales_amount set amount='".$svt_add_value."' where id='".$row['id']."'";
+			$rs2=$db->query($sql2);	
+		}
+
+
+		$sql="select * from control_sales_amount where control_id='".$control_id."' and source_type='pos' and ticket_type='sjt' and value_type='reg'";
+		$rs=$db->query($sql);
+		$nm=$rs->num_rows;
+		
+		if($nm==0){
+			$sql="insert into control_sales_amount(control_id,source_type,ticket_type,value_type,amount) values ";
+			$sql.="('".$control_id."','pos','sjt','reg','".$sjt_amount."')";
+			$rs=$db->query($sql);
+		}	
+		else {
+			$row=$rs->fetch_assoc();
+			$sql="update control_sales_amount set amount='".$sjt_amount."' where id='".$row['id']."'";
+			$rs=$db->query($sql);	
+		}
+
+
+		$sql="select * from control_sales_amount where control_id='".$control_id."' and source_type='pos' and ticket_type='sjt' and value_type='disc'";
+		$rs=$db->query($sql);
+		$nm=$rs->num_rows;
+		
+		if($nm==0){
+			$sql="insert into control_sales_amount(control_id,source_type,ticket_type,value_type,amount) values ";
+			$sql.="('".$control_id."','pos','sjt','disc','".$sjd_amount."')";
+			$rs=$db->query($sql);
+		}	
+		else {
+			$row=$rs->fetch_assoc();
+			$sql="update control_sales_amount set amount='".$sjd_amount."' where id='".$row['id']."'";
+			$rs=$db->query($sql);	
+		}
+
+
+
+
+/*
+
+
+		$discount_sj=number_format($sjd_amount*.20,2);
+		$discount_sv=number_format($svd_amount*.20,2);	
+
+
 		
 		$sql="select * from discount where control_id='".$control_id."'";
 
@@ -443,53 +495,81 @@ if(isset($_POST['ticket_control_id'])){
 			$updateRS=$db->query($update);
 
 		}
-
+*/
 
 
 	}
-	else {
-		$source[0]='pos';
-		$source[1]='tim_a';
-		$source[2]='tim_b';
-		$source[3]='tim_c';
-		$source[4]='tim_d';
+	else if($_POST['type_transact']=="ticket_sold"){
+		$sql="select * from control_sold where control_id='".$control_id."' and source_type='pos' and ticket_type='svc' and value_type='reg'";
 
-		for($k=0;$k<count($source);$k++){
+		$rs=$db->query($sql);
+		$nm=$rs->num_rows;
+		
+		if($nm==0){
+			$sql="insert into control_sold(control_id,source_type,ticket_type,value_type,quantity) values ";
+			$sql.="('".$control_id."','pos','svc','reg','".$svt_total."')";
 
-			$sql="select * from control_sold where control_id='".$control_id."' and source_type='".$source[$k]."'";
+//				'".$sjt_total."','".$sjd_total."','".$svt_total."','".$svd_total."')";
 
 			$rs=$db->query($sql);
-			$nm=$rs->num_rows;
-			
-			if($nm==0){
-				$sql="insert into control_sold(control_id,sjt,svt,source_type) values ";
-				$sql.="('".$control_id."','".$sjt_total[$source[$k]]."','".$svt_total[$source[$k]]."','".$source[$k]."')";
-
-				$rs=$db->query($sql);
-			}	
-			else {
-				$sql="update control_sold set sjt='".$sjt_total[$source[$k]]."',svt='".$svt_total[$source[$k]]."' where control_id='".$control_id."' and source_type='".$source[$k]."'";
-				
-				$rs=$db->query($sql);	
-			}
-		
-	
 		}	
+		else {
+			$row=$rs->fetch_assoc();
+			$sql="update control_sold set quantity='".$svt_total."'  where id='".$row['id']."'";
+			$rs=$db->query($sql);	
+		}
+	
+
+		$sql="select * from control_sold where control_id='".$control_id."' and source_type='pos' and ticket_type='sjt' and value_type='reg'";
+
+		$rs=$db->query($sql);
+		$nm=$rs->num_rows;
+		
+		if($nm==0){
+			$sql="insert into control_sold(control_id,source_type,ticket_type,value_type,quantity) values ";
+			$sql.="('".$control_id."','pos','sjt','reg','".$sjt_total."')";
+
+//				'".$sjt_total."','".$sjd_total."','".$svt_total."','".$svd_total."')";
+
+			$rs=$db->query($sql);
+		}	
+		else {
+			$row=$rs->fetch_assoc();
+			$sql="update control_sold set quantity='".$sjt_total."'  where id='".$row['id']."'";
+	
+			$rs=$db->query($sql);	
+		}
+	
+
+
+		$sql="select * from control_sold where control_id='".$control_id."' and source_type='pos' and ticket_type='sjt' and value_type='disc'";
+
+		$rs=$db->query($sql);
+		$nm=$rs->num_rows;
+		
+		if($nm==0){
+			$sql="insert into control_sold(control_id,source_type,ticket_type,value_type,quantity) values ";
+			$sql.="('".$control_id."','pos','sjt','disc','".$sjd_total."')";
+
+//				'".$sjt_total."','".$sjd_total."','".$svt_total."','".$svd_total."')";
+
+			$rs=$db->query($sql);
+		}	
+		else {
+			$row=$rs->fetch_assoc();
+			$sql="update control_sold set quantity='".$sjd_total."'  where id='".$row['id']."'";
+			
+			$rs=$db->query($sql);	
+		}
+	
+	
 	}
 	
 	
 	
 	$tickets[0]="sjt";
-	$tickets[1]="sjd";
-	$tickets[2]="svt";
-	$tickets[3]="svd";	
-
-	$source[0]="pos";
-	$source[1]="tim_a";
-	$source[2]="tim_b";
-	$source[3]="tim_c";
-	$source[4]="tim_d";
-
+	$tickets[1]="svt";
+	
 	
 	$initial_type=$_POST['type_transact'];
 	
@@ -523,41 +603,37 @@ if(isset($_POST['ticket_control_id'])){
 		
 		}
 		
+		for($i=0;$i<count($tickets);$i++){		
+			if(($_POST[$tickets[$i]."_allocation_a"]=="")&&($_POST[$tickets[$i]."_allocation_b"]=="")){
 
-		for($k=0;$k<count($source);$k++){				
+			}
+			else {
+				$initial=$_POST[$tickets[$i]."_allocation_a"];
+				$additional=$_POST[$tickets[$i]."_allocation_b"];
+				$initial_loose=$_POST[$tickets[$i]."_allocation_a_loose"];
+				$additional_loose=$_POST[$tickets[$i]."_allocation_b_loose"];
+				
+				
+				$sql="select * from allocation where control_id='".$control_id."' and type='".$tickets[$i]."'";
 
-			for($i=0;$i<count($tickets);$i++){		
-				if(($_POST[$source[$k]."_".$tickets[$i]."_allocation_a"]=="")&&($_POST[$source[$k]."_".$tickets[$i]."_allocation_b"]=="")){
+				$rs=$db->query($sql);
+				$nm=$rs->num_rows;
+				
+				if($nm==0){
+					$sql="insert into allocation(control_id,type,initial,additional,initial_loose,additional_loose,transaction_id) values ";
+					$sql.="('".$control_id."','".$tickets[$i]."','".$initial."','".$additional."','".$initial_loose."','".$additional_loose."','".$transaction_id."')";
+					$rs=$db->query($sql);
 
 				}
 				else {
-					$initial=$_POST[$source[$k]."_".$tickets[$i]."_allocation_a"];
-					$additional=$_POST[$source[$k]."_".$tickets[$i]."_allocation_b"];
-					$initial_loose=$_POST[$source[$k]."_".$tickets[$i]."_allocation_a_loose"];
-					$additional_loose=$_POST[$source[$k]."_".$tickets[$i]."_allocation_b_loose"];
+					$sql="update allocation set initial='".$initial."',initial_loose='".$initial_loose."' where control_id='".$control_id."' and type='".$tickets[$i]."'";
 					
-					
-					$sql="select * from allocation where control_id='".$control_id."' and type='".$tickets[$i]."' and source_type='".$source[$k]."'";
+					$rs=$db->query($sql);	
 
-					$rs=$db->query($sql);
-					$nm=$rs->num_rows;
-					
-					if($nm==0){
-						$sql="insert into allocation(control_id,type,initial,additional,initial_loose,additional_loose,transaction_id,source_type) values ";
-						$sql.="('".$control_id."','".$tickets[$i]."','".$initial."','".$additional."','".$initial_loose."','".$additional_loose."','".$transaction_id."','".$source[$k]."')";
-						$rs=$db->query($sql);
-
-					}
-					else {
-						$sql="update allocation set initial='".$initial."',initial_loose='".$initial_loose."' where control_id='".$control_id."' and type='".$tickets[$i]."' and source_type='".$source[$k]."'";
-						
-						$rs=$db->query($sql);	
-
-					}		
-				}	
-			}		
+				}		
+			}	
+		}		
 		
-		}
 							
 	$record_sql="insert into history(action,element,transaction_time,reference_id,log_id) ";
 	$record_sql.=" values ";
@@ -592,43 +668,37 @@ if(isset($_POST['ticket_control_id'])){
 			$transaction_no=$insert_id;		
 		
 		}
-		for($k=0;$k<count($source);$k++){
+		for($i=0;$i<count($tickets);$i++){			
+			if(($_POST[$tickets[$i]."_unsold_a"]=="")&&($_POST[$tickets[$i]."_unsold_b"]=="")&&($_POST[$tickets[$i]."_unsold_c"]=="")){
 
-			for($i=0;$i<count($tickets);$i++){			
-				if(($_POST[$source[$k]."_".$tickets[$i]."_unsold_a"]=="")&&($_POST[$source[$k]."_".$tickets[$i]."_unsold_b"]=="")&&($_POST[$source[$k]."_".$tickets[$i]."_unsold_c"]=="")){
+			}
+			else {
+				$sealed=$_POST[$tickets[$i]."_unsold_a"];
+				$loose_good=$_POST[$tickets[$i]."_unsold_b"];
+				$loose_defective=$_POST[$tickets[$i]."_unsold_c"];
+
+				
+				$sql="select * from control_unsold where control_id='".$control_id."' and type='".$tickets[$i]."'";
+				$rs=$db->query($sql);
+				$nm=$rs->num_rows;
+				
+				if($nm==0){
+					$sql="insert into control_unsold(control_id,source_type,type,sealed,loose_good,loose_defective,transaction_id) values ";
+					$sql.="('".$control_id."','pos','".$tickets[$i]."','".$sealed."','".$loose_good."','".$loose_defective."','".$transaction_id."')";
+
+					$rs=$db->query($sql);
 
 				}
 				else {
-				
-					$sealed=$_POST[$source[$k]."_".$tickets[$i]."_unsold_a"];
-					$loose_good=$_POST[$source[$k]."_".$tickets[$i]."_unsold_b"];
-					$loose_defective=$_POST[$source[$k]."_".$tickets[$i]."_unsold_c"];
+					$sql="update control_unsold set sealed='".$sealed."', loose_good='".$loose_good."', loose_defective='".$loose_defective."' where control_id='".$control_id."' and type='".$tickets[$i]."'";
 
-					
-					$sql="select * from control_unsold where control_id='".$control_id."' and type='".$tickets[$i]."' and source_type='".$source[$k]."'";
-					$rs=$db->query($sql);
-					$nm=$rs->num_rows;
-					
-					if($nm==0){
-						$sql="insert into control_unsold(control_id,type,sealed,loose_good,loose_defective,transaction_id,source_type) values ";
-						$sql.="('".$control_id."','".$tickets[$i]."','".$sealed."','".$loose_good."','".$loose_defective."','".$transaction_id."','".$source[$k]."')";
-						$rs=$db->query($sql);
-
-					}
-					else {
-						$sql="update control_unsold set sealed='".$sealed."', loose_good='".$loose_good."', loose_defective='".$loose_defective."' where control_id='".$control_id."' and type='".$tickets[$i]."' and source_type='".$source[$k]."'";
-						$rs=$db->query($sql);	
-					}
-				
-				}		
-			}
-
+					$rs=$db->query($sql);	
+				}
 			
-
+			}		
 		}
 
-
-
+		
 		
 		
 		$date=date("Y-m-d H:i");
@@ -708,13 +778,18 @@ if(isset($_POST['status_control'])){
 }
 ?>
 <link rel="stylesheet" type="text/css" href="layout/control slip.css">
+<style type='text/css'>
+.red {
+	background-color:red;
+}
+
+</style>
 <script language=javascript>
-function computeSequence(type,column,e,nextField,source){
-	
-	computeTotal(type,source);
+function computeSequence(type,column,e,nextField){
+	computeTotal(type);
 	computeSubTotal(column);
-	
 	if(e.keyCode==13){
+		
 		document.getElementById(nextField).focus();
 		if(nextField=="revolving_remittance"){
 			window.scrollBy(0,100);
@@ -724,14 +799,14 @@ function computeSequence(type,column,e,nextField,source){
 
 }
 
-function computeTotal(type,source){
+function computeTotal(type){
 	var allocationTotal;
 	var excessTotal;
 
+	allocationTotal=document.getElementById(type+'_allocation_a').value*1+document.getElementById(type+'_allocation_a_loose').value*1+document.getElementById(type+'_allocation_b').value*1+document.getElementById(type+'_allocation_b_loose').value*1;
+	excessTotal=document.getElementById(type+'_unsold_a').value*1+document.getElementById(type+'_unsold_b').value*1+document.getElementById(type+'_unsold_c').value*1;
 
-	allocationTotal=document.getElementById(source+'_'+type+'_allocation_a').value*1+document.getElementById(source+'_'+type+'_allocation_a_loose').value*1+document.getElementById(source+'_'+type+'_allocation_b').value*1+document.getElementById(source+'_'+type+'_allocation_b_loose').value*1;
-	excessTotal=document.getElementById(source+'_'+type+'_unsold_a').value*1+document.getElementById(source+'_'+type+'_unsold_b').value*1+document.getElementById(source+'_'+type+'_unsold_c').value*1;
-	document.getElementById(source+'_'+type+'_total').value=allocationTotal*1-excessTotal*1;
+	document.getElementById(type+'_total').value=allocationTotal*1-excessTotal*1;
 
 
 }
@@ -812,23 +887,17 @@ function enableSubmit(){
 
 }
 function computeSubTotal(column){
+
 	var suffix="";
 	suffix=column;
 	var total=0;
-	total+=document.getElementById('pos_sjt'+suffix).value*1;
-	total+=document.getElementById('pos_svt'+suffix).value*1;
+	total+=document.getElementById('sjt'+suffix).value*1;
 
-	total+=document.getElementById('tim_a_sjt'+suffix).value*1;
-	total+=document.getElementById('tim_a_svt'+suffix).value*1;
-
-	total+=document.getElementById('tim_b_sjt'+suffix).value*1;
-	total+=document.getElementById('tim_b_svt'+suffix).value*1;
-
-	total+=document.getElementById('tim_c_sjt'+suffix).value*1;
-	total+=document.getElementById('tim_c_svt'+suffix).value*1;
-
-	total+=document.getElementById('tim_d_sjt'+suffix).value*1;
-	total+=document.getElementById('tim_d_svt'+suffix).value*1;
+	if(column=="_sold"){
+		total+=document.getElementById('sjd'+suffix).value*1;
+	}
+	total+=document.getElementById('svt'+suffix).value*1;
+//	total+=document.getElementById('svd'+suffix).value*1;
 
 	document.getElementById('total'+suffix).value=total*1;
 	
@@ -837,7 +906,12 @@ function computeSubTotal(column){
 	
 	total=0;
 	total+=document.getElementById('sjt'+suffix).value*1;
+	if(column=="_sold"){
+
+		total+=document.getElementById('sjd'+suffix).value*1;
+	}
 	total+=document.getElementById('svt'+suffix).value*1;
+//	total+=document.getElementById('svd'+suffix).value*1;
 
 	document.getElementById('sold'+suffix).value=total*1;
 		
@@ -845,15 +919,14 @@ function computeSubTotal(column){
 }
 
 
-function computeAmount(e,nextField,source){
+function computeAmount(e,nextField){
 	var totalAmount;
 	
-
-	//computeDiscount("sjt",document.getElementById(source+'_sjt_amount').value*1);
-	//computeDiscount("svt",document.getElementById(source+'_svt_amount').value*1);
+	computeDiscount("sjt",document.getElementById('sjt_amount').value*1);
+	computeDiscount("svt",document.getElementById('svt_amount').value*1);
 	
 	
-	totalAmount=document.getElementById('pos_sjt_amount').value*1+document.getElementById('pos_svt_amount').value*1+document.getElementById('tim_a_sjt_amount').value*1+document.getElementById('tim_a_svt_amount').value*1+document.getElementById('tim_b_sjt_amount').value*1+document.getElementById('tim_b_svt_amount').value*1+document.getElementById('tim_c_sjt_amount').value*1+document.getElementById('tim_c_svt_amount').value*1+document.getElementById('tim_d_sjt_amount').value*1+document.getElementById('tim_d_svt_amount').value*1;
+	totalAmount=document.getElementById('sjt_amount').value*1+document.getElementById('sjd_amount').value*1+document.getElementById('svt_amount').value*1+document.getElementById('svt_add_value').value*1;
 	document.getElementById('total_amount').value=totalAmount;
 	document.getElementById('total_amount_display').value=document.getElementById('total_amount').value;
 	
@@ -866,7 +939,7 @@ function computeAmount(e,nextField,source){
 function computeCashRevenue(){
 	var totalRevenue=document.getElementById('total_amount').value*1;
 	var subtotalRevenue=0;
-	for(i=2;i<8;i++){
+	for(i=6;i<8;i++){
 		subtotalRevenue+=(document.getElementById('adjustment_'+i).value*1);
 		totalRevenue=totalRevenue+(document.getElementById('adjustment_'+i).value*1);
 	}
@@ -899,15 +972,17 @@ function computeRemittance(){
 	totalAdditions+=document.getElementById('unreg_sj').value*1;
 	totalAdditions+=document.getElementById('unreg_sv').value*1;
 
-	
+	totalAdditions+=document.getElementById('issuance_fee').value*1;
+	totalAdditions+=document.getElementById('tvm_refund_cash').value*1;
+
 	
 	totalDeductions+=document.getElementById('deduction_2').value*1;
 
 	totalDeductions+=document.getElementById('refund_sj_amount').value*1;
-	totalDeductions+=document.getElementById('refund_sv_amount').value*1;
+	totalDeductions+=document.getElementById('refund_tvm_amount').value*1;
 
-	totalDeductions+=document.getElementById('discount_sj').value*1;
-	totalDeductions+=document.getElementById('discount_sv').value*1;
+//	totalDeductions+=document.getElementById('discount_sj').value*1;
+//	totalDeductions+=document.getElementById('discount_sv').value*1;
 	
 
 	totalRemittance=(totalRemittance+totalAdditions)-totalDeductions;
@@ -933,6 +1008,8 @@ function highlightHeader(){
 	
 
 		document.getElementById('unsold_header').className="header";
+
+		document.getElementById('sold_header').className="header";
 		
 
 		document.getElementById('amount_header').className="header";
@@ -949,6 +1026,7 @@ function highlightHeader(){
 		document.getElementById('amount_header').className="header";
 		document.getElementById('reference_header').className="header";
 
+		document.getElementById('sold_header').className="header";
 
 	}
 	else if(option=='ticket_amount'){
@@ -957,13 +1035,25 @@ function highlightHeader(){
 		document.getElementById('amount_header').className="highlight";
 		document.getElementById('reference_header').className="header";
 
+		document.getElementById('sold_header').className="header";
 	
 	}
+	else if(option=='ticket_sold'){
+		document.getElementById('allocation_header').className="header";
+		document.getElementById('unsold_header').className="header";
+		document.getElementById('amount_header').className="header";
+		document.getElementById('reference_header').className="header";
+		document.getElementById('sold_header').className="highlight";
+
+	
+	}	
 	else if(option=='reference'){
 		document.getElementById('allocation_header').className="header";
 		document.getElementById('unsold_header').className="header";
 		document.getElementById('amount_header').className="header";
 		document.getElementById('reference_header').className="highlight";
+
+		document.getElementById('sold_header').className="header";
 
 	}
 	
@@ -1063,6 +1153,8 @@ Present Transaction:
 <option value='reference'>Reference ID</option>
 <option <?php if($_POST['type_transact']=="reference"){ echo "selected"; } ?> value='allocation'>Allocation</option>
 <option <?php if($_POST['type_transact']=="allocation"){ echo "selected"; } ?> value='remittance'>Remittance</option>
+<option <?php if($_POST['type_transact']=="ticket_sold"){ echo "selected"; } ?> value='ticket_sold'>Ticket Sold</option>
+
 <option <?php if($_POST['type_transact']=="remittance"){ echo "selected"; } ?> value='ticket_amount'>Ticket Amount</option>
 
 </select>
@@ -1081,15 +1173,13 @@ $row=$rs->fetch_assoc();
 
 <table width=100% class='controlTable'>
 <tr class='header'>
-<th rowspan=3>Source</th>
-<th rowspan=3>Ticket Type</th>
+<th rowspan=3>&nbsp;</th>
 <th colspan=4 <?php if($_POST['type_transact']=="reference"){ echo  "class='highlight'"; } else { echo "class='header'"; } ?> id='allocation_header' name='allocation_header'>Allocation</th>
 <th colspan=3  <?php if($_POST['type_transact']=="allocation"){ echo  "class='highlight'"; } else { echo "class='header'"; } ?> id='unsold_header' name='unsold_header'>Unsold/Excess</th>
-<th rowspan=3>Sold</th>
+<th rowspan=3  <?php if($_POST['type_transact']=="ticket_sold"){ echo  "class='highlight'"; } else { echo "class='header'"; } ?> id='sold_header' name='sold_header'>Sold</th>
 <th rowspan=3 <?php if($_POST['type_transact']=="remittance"){ echo  "class='highlight'"; } else { echo "class='header'"; } ?> id='amount_header' name='amount_header'>Amount</th>
 </tr>
 <tr class='subheader'>
-
 <th colspan=2>Initial</th>
 <th colspan=2>Additional</th>
 <th class='category' rowspan=2>Sealed</th>
@@ -1137,51 +1227,33 @@ $allocationNM=$nm;
 for($i=0;$i<$nm;$i++){
 	$row=$rs->fetch_assoc();
 	
-	$allocation[$row['source_type']][$row['type']]["initial"]=$row['initial'];
-	$total_allocation_a+=$allocation[$row['source_type']][$row['type']]["initial"];
+	$allocation[$row['type']]["initial"]=$row['initial'];
+	$total_allocation_a+=$allocation[$row['type']]["initial"];
 	
-	$allocation[$row['source_type']][$row['type']]["initial_loose"]=$row['initial_loose'];
-	$total_allocation_a_loose+=$allocation[$row['source_type']][$row['type']]["initial_loose"];
+	$allocation[$row['type']]["initial_loose"]=$row['initial_loose'];
+	$total_allocation_a_loose+=$allocation[$row['type']]["initial_loose"];
 
-	$allocation[$row['source_type']][$row['type']]["additional"]=$row['additional'];
-	$allocation[$row['source_type']][$row['type']]["additional_loose"]=$row['additional_loose'];
-	$allocation[$row['source_type']][$row['type']]["total"]=$row['initial']*1+$row['additional']*1+$row['initial_loose']*1+$row['additional_loose']*1;
-	$total_allocation_b+=$allocation[$row['source_type']][$row['type']]["additional"];
+	$allocation[$row['type']]["additional"]=$row['additional'];
+	$allocation[$row['type']]["additional_loose"]=$row['additional_loose'];
+	$allocation[$row['type']]["total"]=$row['initial']*1+$row['additional']*1+$row['initial_loose']*1+$row['additional_loose']*1;
+	$total_allocation_b+=$allocation[$row['type']]["additional"];
 
-	$total_allocation_b_loose+=$allocation[$row['source_type']][$row['type']]["additional_loose"];
+	$total_allocation_b_loose+=$allocation[$row['type']]["additional_loose"];
 }
 
 $trackingSQL="select * from control_tracking where control_id='".$control_id."'";
 $trackingRS=$db->query($trackingSQL);
 $trackingNM=$trackingRS->num_rows;
 
-$allocation['pos']['sjt']['additional']=0;
-$allocation['pos']['svt']['additional']=0;
+$allocation['sjt']['additional']=0;
+$allocation['svt']['additional']=0;
+$allocation['sjd']['additional']=0;
+$allocation['svd']['additional']=0;
 
-$allocation['tim_a']['sjt']['additional']=0;
-$allocation['tim_a']['svt']['additional']=0;
-$allocation['tim_b']['sjt']['additional']=0;
-$allocation['tim_b']['svt']['additional']=0;
-$allocation['tim_c']['sjt']['additional']=0;
-$allocation['tim_c']['svt']['additional']=0;
-$allocation['tim_d']['sjt']['additional']=0;
-$allocation['tim_d']['svt']['additional']=0;
-
-
-
-$allocation['pos']['sjt']['additional_loose']=0;
-$allocation['pos']['svt']['additional_loose']=0;
-
-$allocation['tim_a']['sjt']['additional_loose']=0;
-$allocation['tim_a']['svt']['additional_loose']=0;
-$allocation['tim_b']['sjt']['additional_loose']=0;
-$allocation['tim_b']['svt']['additional_loose']=0;
-$allocation['tim_c']['sjt']['additional_loose']=0;
-$allocation['tim_c']['svt']['additional_loose']=0;
-$allocation['tim_d']['sjt']['additional_loose']=0;
-$allocation['tim_d']['svt']['additional_loose']=0;
-
-
+$allocation['sjt']['additional_loose']=0;
+$allocation['svt']['additional_loose']=0;
+$allocation['sjd']['additional_loose']=0;
+$allocation['svd']['additional_loose']=0;
 
 for($kl=0;$kl<$trackingNM;$kl++){
 $trackingRow=$trackingRS->fetch_assoc();
@@ -1198,62 +1270,41 @@ $nm=$rs->num_rows;
 
 	for($i=0;$i<$nm;$i++){
 		$row=$rs->fetch_assoc();
-		$allocation[$row['source_type']]['sjt']['additional']+=$row['sjt'];
-		$allocation[$row['source_type']]['svt']['additional']+=$row['svt'];
-		$allocation[$row['source_type']]['sjd']['additional']+=$row['sjd'];
-		$allocation[$row['source_type']]['svd']['additional']+=$row['svd'];
+		$allocation['sjt']['additional']+=$row['sjt'];
+		$allocation['svt']['additional']+=$row['svt'];
+		$allocation['sjd']['additional']+=$row['sjd'];
+		$allocation['svd']['additional']+=$row['svd'];
 
-		$allocation[$row['source_type']]['sjt']['additional_loose']+=$row['sjt_loose'];
-		$allocation[$row['source_type']]['svt']['additional_loose']+=$row['svt_loose'];
-		$allocation[$row['source_type']]['sjd']['additional_loose']+=$row['sjd_loose'];
-		$allocation[$row['source_type']]['svd']['additional_loose']+=$row['svd_loose'];
+		$allocation['sjt']['additional_loose']+=$row['sjt_loose'];
+		$allocation['svt']['additional_loose']+=$row['svt_loose'];
+		$allocation['sjd']['additional_loose']+=$row['sjd_loose'];
+		$allocation['svd']['additional_loose']+=$row['svd_loose'];
 
-		$total_allocation_b+=$allocation[$row['source_type']]['sjt']["additional"];
-		$total_allocation_b+=$allocation[$row['source_type']]['sjd']["additional"];
-		$total_allocation_b+=$allocation[$row['source_type']]['svt']["additional"];
-		$total_allocation_b+=$allocation[$row['source_type']]['svd']["additional"];
+		$total_allocation_b+=$allocation['sjt']["additional"];
+		$total_allocation_b+=$allocation['sjd']["additional"];
+		$total_allocation_b+=$allocation['svt']["additional"];
+		$total_allocation_b+=$allocation['svd']["additional"];
 
-		$total_allocation_b_loose+=$allocation[$row['source_type']]['sjd']["additional_loose"];
-		$total_allocation_b_loose+=$allocation[$row['source_type']]['sjt']["additional_loose"];
-		$total_allocation_b_loose+=$allocation[$row['source_type']]['svd']["additional_loose"];
-		$total_allocation_b_loose+=$allocation[$row['source_type']]['svt']["additional_loose"];
+		$total_allocation_b_loose+=$allocation['sjd']["additional_loose"];
+		$total_allocation_b_loose+=$allocation['sjt']["additional_loose"];
+		$total_allocation_b_loose+=$allocation['svd']["additional_loose"];
+		$total_allocation_b_loose+=$allocation['svt']["additional_loose"];
 	}
 }
 
 
 
-$sql="update allocation set additional='".$allocation['pos']['sjt']['additional']."',additional_loose='".$allocation['pos']['sjt']['additional_loose']."' where control_id='".$control_id."' and  type='sjt' and source_type='pos'";
+$sql="update allocation set additional='".$allocation['sjt']['additional']."',additional_loose='".$allocation['sjt']['additional_loose']."' where control_id='".$control_id."' and 'sjt'";
 $rs=$db->query($sql);
 
-$sql="update allocation set additional='".$allocation['pos']['svt']['additional']."',additional_loose='".$allocation['pos']['svt']['additional_loose']."' where control_id='".$control_id."' and type='svt' and source_type='pos'";
+$sql="update allocation set additional='".$allocation['svt']['additional']."',additional_loose='".$allocation['svt']['additional_loose']."' where control_id='".$control_id."' and 'svt'";
 $rs=$db->query($sql);
 
-
-$sql="update allocation set additional='".$allocation['tim_a']['sjt']['additional']."',additional_loose='".$allocation['tim_a']['sjt']['additional_loose']."' where control_id='".$control_id."' and  type='sjt' and source_type='tim_a'";
+$sql="update allocation set additional='".$allocation['sjd']['additional']."',additional_loose='".$allocation['sjd']['additional_loose']."' where control_id='".$control_id."' and 'sjd'";
 $rs=$db->query($sql);
 
-$sql="update allocation set additional='".$allocation['tim_a']['svt']['additional']."',additional_loose='".$allocation['tim_a']['svt']['additional_loose']."' where control_id='".$control_id."' and type='svt' and source_type='tim_a'";
+$sql="update allocation set additional='".$allocation['svd']['additional']."',additional_loose='".$allocation['svd']['additional_loose']."' where control_id='".$control_id."' and 'svd'";
 $rs=$db->query($sql);
-
-
-$sql="update allocation set additional='".$allocation['tim_b']['sjt']['additional']."',additional_loose='".$allocation['tim_b']['sjt']['additional_loose']."' where control_id='".$control_id."' and  type='sjt' and source_type='tim_b'";
-$rs=$db->query($sql);
-
-$sql="update allocation set additional='".$allocation['tim_b']['svt']['additional']."',additional_loose='".$allocation['tim_b']['svt']['additional_loose']."' where control_id='".$control_id."' and type='svt' and source_type='tim_b'";
-$rs=$db->query($sql);
-
-$sql="update allocation set additional='".$allocation['tim_c']['sjt']['additional']."',additional_loose='".$allocation['tim_c']['sjt']['additional_loose']."' where control_id='".$control_id."' and  type='sjt' and source_type='tim_c'";
-$rs=$db->query($sql);
-
-$sql="update allocation set additional='".$allocation['tim_c']['svt']['additional']."',additional_loose='".$allocation['tim_c']['svt']['additional_loose']."' where control_id='".$control_id."' and type='svt' and source_type='tim_c'";
-$rs=$db->query($sql);
-
-$sql="update allocation set additional='".$allocation['tim_d']['sjt']['additional']."',additional_loose='".$allocation['tim_d']['sjt']['additional_loose']."' where control_id='".$control_id."' and  type='sjt' and source_type='tim_d'";
-$rs=$db->query($sql);
-
-$sql="update allocation set additional='".$allocation['tim_d']['svt']['additional']."',additional_loose='".$allocation['tim_d']['svt']['additional_loose']."' where control_id='".$control_id."' and type='svt' and source_type='tim_d'";
-$rs=$db->query($sql);
-
 
 
 $sql="select * from control_unsold where control_id='".$control_id."'";
@@ -1264,15 +1315,15 @@ $unsoldNM=$nm;
 for($i=0;$i<$nm;$i++){
 	$row=$rs->fetch_assoc();
 	
-	$unsold[$row['source_type']][$row['type']]["sealed"]=$row['sealed'];
-	$unsold[$row['source_type']][$row['type']]["loose_good"]=$row['loose_good'];
-	$unsold[$row['source_type']][$row['type']]["loose_defective"]=$row['loose_defective'];
+	$unsold[$row['type']]["sealed"]=$row['sealed'];
+	$unsold[$row['type']]["loose_good"]=$row['loose_good'];
+	$unsold[$row['type']]["loose_defective"]=$row['loose_defective'];
 
-	$total_unsold_a+=$unsold[$row['source_type']][$row['type']]['sealed'];
-	$total_unsold_b+=$unsold[$row['source_type']][$row['type']]['loose_good'];
-	$total_unsold_c+=$unsold[$row['source_type']][$row['type']]['loose_defective'];
+	$total_unsold_a+=$unsold[$row['type']]['sealed'];
+	$total_unsold_b+=$unsold[$row['type']]['loose_good'];
+	$total_unsold_c+=$unsold[$row['type']]['loose_defective'];
 
-	$unsold[$row['source_type']][$row['type']]['total']=$row['sealed']*1+$row['loose_good']*1+$row['loose_defective']*1;
+	$unsold[$row['type']]['total']=$row['sealed']*1+$row['loose_good']*1+$row['loose_defective']*1;
 }
 
 
@@ -1281,272 +1332,147 @@ for($i=0;$i<$nm;$i++){
 $sql="select * from control_sold where control_id='".$control_id."'";
 $rs=$db->query($sql);
 $nm=$rs->num_rows;
-$row=$rs->fetch_assoc();
 
 if($unsoldNM==0){
-	$sold_tickets["pos"]["sjt"]=$allocation["pos"]["sjt"]["initial"]+$allocation["pos"]["sjt"]["initial_loose"]+$allocation["pos"]['sjt']["additional"]+$allocation["pos"]['sjt']["additional_loose"];
-	$sold_tickets["pos"]["svt"]=$allocation["pos"]["svt"]["initial"]+$allocation["pos"]["svt"]["initial_loose"]+$allocation["pos"]['svt']["additional"]+$allocation["pos"]['svt']["additional_loose"];
-
-	$sold_tickets["tim_a"]["sjt"]=$allocation["tim_a"]["sjt"]["initial"]+$allocation["tim_a"]["sjt"]["initial_loose"]+$allocation["tim_a"]['sjt']["additional"]+$allocation["tim_a"]['sjt']["additional_loose"];
-	$sold_tickets["tim_a"]["svt"]=$allocation["tim_a"]["svt"]["initial"]+$allocation["tim_a"]["svt"]["initial_loose"]+$allocation["tim_a"]['svt']["additional"]+$allocation["tim_a"]['svt']["additional_loose"];
-
-	$sold_tickets["tim_b"]["sjt"]=$allocation["tim_b"]["sjt"]["initial"]+$allocation["tim_b"]["sjt"]["initial_loose"]+$allocation["tim_b"]['sjt']["additional"]+$allocation["tim_b"]['sjt']["additional_loose"];
-	$sold_tickets["tim_b"]["svt"]=$allocation["tim_b"]["svt"]["initial"]+$allocation["tim_b"]["svt"]["initial_loose"]+$allocation["tim_b"]['svt']["additional"]+$allocation["tim_b"]['svt']["additional_loose"];
-
-	$sold_tickets["tim_c"]["sjt"]=$allocation["tim_c"]["sjt"]["initial"]+$allocation["tim_c"]["sjt"]["initial_loose"]+$allocation["tim_c"]['sjt']["additional"]+$allocation["tim_c"]['sjt']["additional_loose"];
-	$sold_tickets["tim_c"]["svt"]=$allocation["tim_c"]["svt"]["initial"]+$allocation["tim_c"]["svt"]["initial_loose"]+$allocation["tim_c"]['svt']["additional"]+$allocation["tim_c"]['svt']["additional_loose"];
-
-	$sold_tickets["tim_d"]["sjt"]=$allocation["tim_d"]["sjt"]["initial"]+$allocation["tim_d"]["sjt"]["initial_loose"]+$allocation["tim_d"]['sjt']["additional"]+$allocation["tim_d"]['sjt']["additional_loose"];
-	$sold_tickets["tim_d"]["svt"]=$allocation["tim_d"]["svt"]["initial"]+$allocation["tim_d"]["svt"]["initial_loose"]+$allocation["tim_d"]['svt']["additional"]+$allocation["tim_d"]['svt']["additional_loose"];
-
+//	$sold_tickets["sjt"]=$allocation["sjt"]["initial"]+$allocation["sjt"]["initial_loose"]+$allocation['sjt']["additional"]+$allocation['sjt']["additional_loose"];
+//	$sold_tickets["sjd"]=$allocation["sjd"]["initial"]+$allocation["sjd"]["initial_loose"]+$allocation['sjd']["additional"]+$allocation['sjd']["additional_loose"];
+//	$sold_tickets["svt"]=$allocation["svt"]["initial"]+$allocation["svt"]["initial_loose"]+$allocation['svt']["additional"]+$allocation['svt']["additional_loose"];
+//	$sold_tickets["svd"]=$allocation["svd"]["initial"]+$allocation["svd"]["initial_loose"]+$allocation['svd']["additional"]+$allocation['svd']["additional_loose"];
 	
 }
 else {
+
 	for($i=0;$i<$nm;$i++){
-		$sold_tickets[$row['source_type']]["sjt"]=$row['sjt']*1;
-		$sold_tickets[$row['source_type']]["svt"]=$row['svt']*1;
+
+		$row=$rs->fetch_assoc();
+
+		$sold_tickets[$row['ticket_type']][$row['value_type']]=$row['quantity'];
 
 
+		$total_sold+=$sold_tickets[$row['ticket_type']][$row['value_type']];
 
 
 	}
 
 
+
+//	$sold_tickets["sjt"]=$row['sjt']*1;
+//	$sold_tickets["sjd"]=$row['sjd']*1;
+//	$sold_tickets["svt"]=$row['svt']*1;
+//	$sold_tickets["svd"]=$row['svd']*1;
+
+}
+$class="";
+if(($sold_tickets['sjt']['reg']+$sold_tickets['sjt']['disc'])!==($allocation["sjt"]["initial"]+$allocation["sjt"]["initial_loose"]+$allocation['sjt']["additional"]+$allocation['sjt']["additional_loose"]-($unsold['sjt']['sealed']+$unsold['sjt']['loose_good']+$unsold['sjt']['loose_defective']))){
+	$class="red";
 }
 
-$total_sold+=$sold_tickets["sjt"];
-$total_sold+=$sold_tickets["svt"];
 
-		$sql="select * from control_sales_amount where control_id='".$control_id."' ";
-		$rs=$db->query($sql);
-		$nm=$rs->num_rows;
 
-		if($nm>0){
-			for($k=0;$k<$nm;$k++){
-				$row=$rs->fetch_assoc();
-				$sjt_amount[$row['source_type']]=$row['sjt'];
-				$svt_amount[$row['source_type']]=$row['svt'];
-				
-				$cash_revenue_1=$sjt_amount[$row['source_type']]*1+$svt_amount[$row['source_type']]*1;
 
-				$total_amount+=$row['sjt'];
-				$total_amount+=$row['svt'];
-			}	
-		}
-		else {
-		//	$svt_amount=$sold_tickets["svt"]*100;
-		//	$svd_amount=$sold_tickets["svd"]*100;
 
-		//	$total_amount+=$row['svt'];
-		//	$total_amount+=$row['svd'];
-			
-		}
+$sql="select * from control_sales_amount where control_id='".$control_id."' and source_type='pos'";
+$rs=$db->query($sql);
+$nm=$rs->num_rows;
+
+
+if($nm>0){
+	for($i=0;$i<$nm;$i++){
+
+		$row=$rs->fetch_assoc();
+	//	$sjt_amount=$row['sjt'];
+	//	$sjd_amount=$row['sjd'];
+	//	$svt_amount=$row['svt'];
+	//	$svd_amount=$row['svd'];
+		
+		$ticket_amount[$row['ticket_type']][$row['value_type']]=$row['amount'];
+
+		$total_amount+=$ticket_amount[$row['ticket_type']][$row['value_type']]*1;
+
+
+		$cash_revenue_1+=$ticket_amount[$row['ticket_type']][$row['value_type']]*1;
+
+
+	//	$cash_revenue_1=$sjt_amount*1+$sjd_amount*1+$svt_amount*1+$svd_amount*1;
+
+	//	$total_amount+=$row['sjt'];
+	//	$total_amount+=$row['sjd'];
+	//	$total_amount+=$row['svt'];
+	//	$total_amount+=$row['svd'];
+
+	}
+}
+else {
+//	$svt_amount=$sold_tickets["svt"]*100;
+//	$svd_amount=$sold_tickets["svd"]*100;
+
+//	$total_amount+=$row['svt'];
+//	$total_amount+=$row['svd'];
+	
+}
 
 
 ?>
 
-<tr>
-<td rowspan=2>POS</td>
 
+<tr>
+<td>SV1</td>
+<td><input type=text size=5 name='svt_allocation_a' id='svt_allocation_a' onfocus='focusHeader("allocation")' onkeyup="computeSequence('svt','_allocation_a',event,'sjt_allocation_a')" value='<?php echo $allocation["svt"]["initial"]; ?>' /></td>
+<td><input type=text size=5 name='svt_allocation_a_loose' id='svt_allocation_a_loose' onfocus='focusHeader("allocation")'  onkeyup="computeSequence('svt','_allocation_a_loose',event,'sjt_allocation_a_loose')" value='<?php echo $allocation["svt"]["initial_loose"]; ?>' /></td>
+
+<td><input type=text size=5 name='svt_allocation_b' id='svt_allocation_b' onkeyup="computeSequence('svt','_allocation_b',event,'sjt_allocation_b')" onfocus='focusHeader("allocation")'  value='<?php echo $allocation["svt"]["additional"]; ?>' /> <a href='#' onclick='window.open("control_tracking.php?control_track=<?php echo $control_id; ?>","control_track","height=550, width=800");'>Track</a></td>
+<td><input type=text size=5 name='svt_allocation_b_loose' id='svt_allocation_b_loose' onkeyup="computeSequence('svt','_allocation_b_loose',event,'sjt_allocation_a_loose')" onfocus='focusHeader("allocation")'  value='<?php echo $allocation["svt"]["additional_loose"]; ?>' /> <a href='#' onclick='window.open("control_tracking.php?control_track=<?php echo $control_id; ?>","control_track","height=550, width=800");'>Track</a></td>
+
+<td><input type=text size=5 name='svt_unsold_a' id='svt_unsold_a' onkeyup="computeSequence('svt','_unsold_a',event,'sjt_unsold_a')" onfocus='focusHeader("remittance")'   value='<?php echo $unsold["svt"]["sealed"]; ?>'   /></td>
+<td><input type=text size=5 name='svt_unsold_b' id='svt_unsold_b' onkeyup="computeSequence('svt','_unsold_b',event,'sjt_unsold_b')" onfocus='focusHeader("remittance")'  value='<?php echo $unsold["svt"]["loose_good"]; ?>'   /></td>
+
+<td><input type=text size=5 name='svt_unsold_c' id='svt_unsold_c' onkeyup="computeSequence('svt','_unsold_c',event,'sjt_unsold_c')" onfocus='focusHeader("remittance")'   value='<?php echo $unsold["svt"]["loose_defective"]; ?>'  /></td>
+<td><input type=text name='svt_total' id='svt_total' onfocus='focusHeader("ticket_sold")' value='<?php echo $sold_tickets["svc"]["reg"];?>' /></td>
+<td><input type=text name='svt_amount' id='svt_amount' onkeyup='computeAmount(event,"svt_add_value")'  value="<?php echo $ticket_amount['svc']['issuance_fee']; ?>" onblur='computeAmount(event,"svd_amount");'  onfocus='focusHeader("ticket_amount")'  /></td>
+
+</tr>
+
+
+<tr>
+<td>SV1/SV2</td>
+<td colspan=7>&nbsp;</td>
+<td>ADD VALUE</td>
+<td><input type=text name='svt_add_value' id='svt_add_value' onkeyup='computeAmount(event,"sjt_amount")'  value='<?php echo $ticket_amount['svc']['add_value'];  ?>'  onfocus='focusHeader("ticket_amount")'  onblur='computeAmount(event,"svd_amount");'  /></td>
+
+</tr>
+
+<tr>
 <td>SJT</td>
-<td><input type=text size=5 name='pos_sjt_allocation_a' id='pos_sjt_allocation_a' onfocus='focusHeader("allocation")' onkeyup="computeSequence('sjt','_allocation_a',event,'pos_svt_allocation_a','pos')" value='<?php echo $allocation["pos"]["sjt"]["initial"]; ?>' /></td>
-<td><input type=text size=5 name='pos_sjt_allocation_a_loose' id='pos_sjt_allocation_a_loose' onfocus='focusHeader("allocation")'  onkeyup="computeSequence('sjt','_allocation_a_loose',event,'pos_svt_allocation_a_loose','pos')" value='<?php echo $allocation["pos"]["sjt"]["initial_loose"]; ?>' /></td>
+<td rowspan=2><input type=text size=5 name='sjt_allocation_a' id='sjt_allocation_a' onfocus='focusHeader("allocation")' onkeyup="computeSequence('sjt','_allocation_a',event,'svt_allocation_a_loose')" value='<?php echo $allocation["sjt"]["initial"]; ?>' /></td>
+<td rowspan=2><input type=text size=5 name='sjt_allocation_a_loose' id='sjt_allocation_a_loose' onfocus='focusHeader("allocation")'  onkeyup="computeSequence('sjt','_allocation_a_loose',event,'svt_unsold_a')" value='<?php echo $allocation["sjt"]["initial_loose"]; ?>' /></td>
 
-<td><input type=text size=5 name='pos_sjt_allocation_b' id='pos_sjt_allocation_b' onfocus='focusHeader("allocation")'  onkeyup="computeSequence('sjt','_allocation_b',event,'pos_svt_allocation_b_loose','pos')" value='<?php echo $allocation["pos"]["sjt"]["additional"]; ?>' /> <a href='#' onclick='window.open("control_tracking.php?control_track=<?php echo $control_id; ?>","control_track","height=550, width=800");'>Track</a></td>
-<td><input type=text size=5 name='pos_sjt_allocation_b_loose' id='pos_sjt_allocation_b_loose' onfocus='focusHeader("allocation")'  onkeyup="computeSequence('sjt','_allocation_b_loose',event,'pos_svt_allocation_b_loose','pos')" value='<?php echo $allocation["pos"]["sjt"]["additional_loose"]; ?>' /> <a href='#' onclick='window.open("control_tracking.php?control_track=<?php echo $control_id; ?>","control_track","height=550, width=800");'>Track</a></td>
+<td rowspan=2><input type=text size=5 name='sjt_allocation_b' id='sjt_allocation_b' onfocus='focusHeader("allocation")'  onkeyup="computeSequence('sjt','_allocation_b',event,'svt_allocation_b_loose')" value='<?php echo $allocation["sjt"]["additional"]; ?>' /> <a href='#' onclick='window.open("control_tracking.php?control_track=<?php echo $control_id; ?>","control_track","height=550, width=800");'>Track</a></td>
+<td rowspan=2><input type=text size=5 name='sjt_allocation_b_loose' id='sjt_allocation_b_loose' onfocus='focusHeader("allocation")'  onkeyup="computeSequence('sjt','_allocation_b_loose',event,'svt_unsold_a')" value='<?php echo $allocation["sjt"]["additional_loose"]; ?>' /> <a href='#' onclick='window.open("control_tracking.php?control_track=<?php echo $control_id; ?>","control_track","height=550, width=800");'>Track</a></td>
 
 
-<td><input type=text size=5 name='pos_sjt_unsold_a' id='pos_sjt_unsold_a' onkeyup="computeSequence('sjt','_unsold_a',event,'pos_svt_unsold_a','pos')" onfocus='focusHeader("remittance")'  value='<?php echo $unsold["pos"]["sjt"]["sealed"]; ?>'  /></td>
-<td><input type=text size=5 name='pos_sjt_unsold_b' id='pos_sjt_unsold_b' onkeyup="computeSequence('sjt','_unsold_b',event,'pos_svt_unsold_b','pos')" onfocus='focusHeader("remittance")'    value='<?php echo $unsold["pos"]["sjt"]["loose_good"]; ?>' /></td>
+<td rowspan=2><input type=text size=5 name='sjt_unsold_a' id='sjt_unsold_a' onkeyup="computeSequence('sjt','_unsold_a',event,'svt_unsold_b')" onfocus='focusHeader("remittance")'  value='<?php echo $unsold["sjt"]["sealed"]; ?>'  /></td>
+<td rowspan=2><input type=text size=5 name='sjt_unsold_b' id='sjt_unsold_b' onkeyup="computeSequence('sjt','_unsold_b',event,'svt_unsold_c')" onfocus='focusHeader("remittance")'    value='<?php echo $unsold["sjt"]["loose_good"]; ?>' /></td>
 
-<td><input type=text size=5 name='pos_sjt_unsold_c' id='pos_sjt_unsold_c' onkeyup="computeSequence('sjt','_unsold_c',event,'pos_svt_unsold_c','pos')"  onfocus='focusHeader("remittance")'   value='<?php echo $unsold["pos"]["sjt"]["loose_defective"]; ?>' /></td>
-<td><input type=text name='pos_sjt_total' id='pos_sjt_total' value='<?php echo $sold_tickets["pos"]["sjt"];?>' /></td>
-<td><input type=text name='pos_sjt_amount' id='pos_sjt_amount' onkeyup='computeAmount(event,"sjt_amount","pos")' value='<?php echo $sjt_amount["pos"]; ?>'  onfocus='focusHeader("ticket_amount")'   onblur='computeAmount(event,"sjd_amount");' /></td>
+<td rowspan=2><input type=text size=5 name='sjt_unsold_c' id='sjt_unsold_c' onkeyup="computeSequence('sjt','_unsold_c',event,'svt_unsold_c')"  onfocus='focusHeader("remittance")'   value='<?php echo $unsold["sjt"]["loose_defective"]; ?>' /></td>
+<td class='<?php echo $class; ?>'><input type=text  name='sjt_total' id='sjt_total' onfocus='focusHeader("ticket_sold")'  value='<?php echo $sold_tickets["sjt"]["reg"];?>' /></td>
+<td><input type=text name='sjt_amount' id='sjt_amount' onkeyup='computeAmount(event,"sjd_amount")' value='<?php echo $ticket_amount['sjt']['reg'];  ?>'  onfocus='focusHeader("ticket_amount")'   onblur='computeAmount(event,"sjd_amount");' /></td>
+
+</tr>
+
+
+<tr>
+<td>SJD</td>
+<td class='<?php echo $class; ?>' ><input type=text name='sjd_total' id='sjd_total' value='<?php echo $sold_tickets["sjt"]["disc"];?>' onfocus='focusHeader("ticket_sold")'  /></td>
+<td><input type=text name='sjd_amount' id='sjd_amount' onkeyup='computeAmount(event,"sjd_amount")' value='<?php echo $ticket_amount['sjt']['disc'];  ?>' onfocus='focusHeader("ticket_amount")'    onblur='computeAmount(event,"svt_amount");'  /></td>
 
 </tr>
 
 
 
 
-<tr>
-<td>SVT</td>
-<td><input type=text size=5 name='pos_svt_allocation_a' id='pos_svt_allocation_a' onfocus='focusHeader("allocation")' onkeyup="computeSequence('svt','_allocation_a',event,'tim_a_sjt_allocation_a','pos')" value='<?php echo $allocation["pos"]["svt"]["initial"]; ?>' /></td>
-<td><input type=text size=5 name='pos_svt_allocation_a_loose' id='pos_svt_allocation_a_loose' onfocus='focusHeader("allocation")'  onkeyup="computeSequence('svt','_allocation_a_loose',event,'tim_a_sjt_allocation_a_loose','pos')" value='<?php echo $allocation["pos"]["svt"]["initial_loose"]; ?>' /></td>
-
-<td><input type=text size=5 name='pos_svt_allocation_b' id='pos_svt_allocation_b' onkeyup="computeSequence('svt','_allocation_b',event,'tim_a_sjt_allocation_b','pos')" onfocus='focusHeader("allocation")'  value='<?php echo $allocation["pos"]["svt"]["additional"]; ?>' /> <a href='#' onclick='window.open("control_tracking.php?control_track=<?php echo $control_id; ?>","control_track","height=550, width=800");'>Track</a></td>
-<td><input type=text size=5 name='pos_svt_allocation_b_loose' id='pos_svt_allocation_b_loose' onkeyup="computeSequence('svt','_allocation_b_loose',event,'tim_a_sjt_allocation_a_loose','pos')" onfocus='focusHeader("allocation")'  value='<?php echo $allocation["pos"]["svt"]["additional_loose"]; ?>' /> <a href='#' onclick='window.open("control_tracking.php?control_track=<?php echo $control_id; ?>","control_track","height=550, width=800");'>Track</a></td>
-
-<td><input type=text size=5 name='pos_svt_unsold_a' id='pos_svt_unsold_a' onkeyup="computeSequence('svt','_unsold_a',event,'tim_a_sjt_unsold_a','pos')" onfocus='focusHeader("remittance")'   value='<?php echo $unsold["pos"]["svt"]["sealed"]; ?>'   /></td>
-<td><input type=text size=5 name='pos_svt_unsold_b' id='pos_svt_unsold_b' onkeyup="computeSequence('svt','_unsold_b',event,'tim_a_sjt_unsold_b','pos')" onfocus='focusHeader("remittance")'  value='<?php echo $unsold["pos"]["svt"]["loose_good"]; ?>'   /></td>
-
-<td><input type=text size=5 name='pos_svt_unsold_c' id='pos_svt_unsold_c' onkeyup="computeSequence('svt','_unsold_c',event,'tim_a_sjt_unsold_c','pos')" onfocus='focusHeader("remittance")'   value='<?php echo $unsold["pos"]["svt"]["loose_defective"]; ?>'  /></td>
-<td><input type=text name='pos_svt_total' id='pos_svt_total' value='<?php echo $sold_tickets["pos"]["svt"];?>' /></td>
-<td><input type=text name='pos_svt_amount' id='pos_svt_amount' onkeyup='computeAmount(event,"svt_amount","pos")'  value='<?php echo $svt_amount["pos"]; ?>' onblur='computeAmount(event,"svd_amount");'  onfocus='focusHeader("ticket_amount")'  /></td>
-
-</tr>
 
 <tr>
-<td rowspan=2>TIM 1</td>
-
-<td>SJT</td>
-<td><input type=text size=5 name='tim_a_sjt_allocation_a' id='tim_a_sjt_allocation_a' onfocus='focusHeader("allocation")' onkeyup="computeSequence('sjt','_allocation_a',event,'tim_a_svt_allocation_a','tim_a')" value='<?php echo $allocation["tim_a"]["sjt"]["initial"]; ?>' /></td>
-<td><input type=text size=5 name='tim_a_sjt_allocation_a_loose' id='tim_a_sjt_allocation_a_loose' onfocus='focusHeader("allocation")'  onkeyup="computeSequence('sjt','_allocation_a_loose',event,'tim_a_svt_allocation_a_loose','tim_a')" value='<?php echo $allocation["tim_a"]["sjt"]["initial_loose"]; ?>' /></td>
-
-<td><input type=text size=5 name='tim_a_sjt_allocation_b' id='tim_a_sjt_allocation_b' onfocus='focusHeader("allocation")'  onkeyup="computeSequence('sjt','_allocation_b',event,'tim_a_svt_allocation_b_loose','tim_a')" value='<?php echo $allocation["tim_a"]["sjt"]["additional"]; ?>' /> <a href='#' onclick='window.open("control_tracking.php?control_track=<?php echo $control_id; ?>","control_track","height=550, width=800");'>Track</a></td>
-<td><input type=text size=5 name='tim_a_sjt_allocation_b_loose' id='tim_a_sjt_allocation_b_loose' onfocus='focusHeader("allocation")'  onkeyup="computeSequence('sjt','_allocation_b_loose',event,'tim_a_svt_allocation_b_loose','tim_a')" value='<?php echo $allocation["tim_a"]["sjt"]["additional_loose"]; ?>' /> <a href='#' onclick='window.open("control_tracking.php?control_track=<?php echo $control_id; ?>","control_track","height=550, width=800");'>Track</a></td>
-
-
-<td><input type=text size=5 name='tim_a_sjt_unsold_a' id='tim_a_sjt_unsold_a' onkeyup="computeSequence('sjt','_unsold_a',event,'tim_a_svt_unsold_a','tim_a')" onfocus='focusHeader("remittance")'  value='<?php echo $unsold["tim_a"]["sjt"]["sealed"]; ?>'  /></td>
-<td><input type=text size=5 name='tim_a_sjt_unsold_b' id='tim_a_sjt_unsold_b' onkeyup="computeSequence('sjt','_unsold_b',event,'tim_a_svt_unsold_b','tim_a')" onfocus='focusHeader("remittance")'    value='<?php echo $unsold["tim_a"]["sjt"]["loose_good"]; ?>' /></td>
-
-<td><input type=text size=5 name='tim_a_sjt_unsold_c' id='tim_a_sjt_unsold_c' onkeyup="computeSequence('sjt','_unsold_c',event,'tim_a_svt_unsold_c','tim_a')"  onfocus='focusHeader("remittance")'   value='<?php echo $unsold["tim_a"]["sjt"]["loose_defective"]; ?>' /></td>
-<td><input type=text name='tim_a_sjt_total' id='tim_a_sjt_total' value='<?php echo $sold_tickets["tim_a"]["sjt"];?>' /></td>
-<td><input type=text name='tim_a_sjt_amount' id='tim_a_sjt_amount' onkeyup='computeAmount(event,"sjt_amount","tim_a")' value='<?php echo $sjt_amount["tim_a"]; ?>'  onfocus='focusHeader("ticket_amount")'   onblur='computeAmount(event,"sjd_amount");' /></td>
-
-</tr>
-
-
-
-
-<tr>
-<td>SVT</td>
-<td><input type=text size=5 name='tim_a_svt_allocation_a' id='tim_a_svt_allocation_a' onfocus='focusHeader("allocation")' onkeyup="computeSequence('svt','_allocation_a',event,'tim_b_sjt_allocation_a','tim_a')" value='<?php echo $allocation["tim_a"]["svt"]["initial"]; ?>' /></td>
-<td><input type=text size=5 name='tim_a_svt_allocation_a_loose' id='tim_a_svt_allocation_a_loose' onfocus='focusHeader("allocation")'  onkeyup="computeSequence('svt','_allocation_a_loose',event,'tim_b_sjt_allocation_a_loose','tim_a')" value='<?php echo $allocation["tim_a"]["svt"]["initial_loose"]; ?>' /></td>
-
-<td><input type=text size=5 name='tim_a_svt_allocation_b' id='tim_a_svt_allocation_b' onkeyup="computeSequence('svt','_allocation_b',event,'tim_b_sjt_allocation_b','tim_a')" onfocus='focusHeader("allocation")'  value='<?php echo $allocation["tim_a"]["svt"]["additional"]; ?>' /> <a href='#' onclick='window.open("control_tracking.php?control_track=<?php echo $control_id; ?>","control_track","height=550, width=800");'>Track</a></td>
-<td><input type=text size=5 name='tim_a_svt_allocation_b_loose' id='tim_a_svt_allocation_b_loose' onkeyup="computeSequence('svt','_allocation_b_loose',event,'tim_b_sjt_allocation_a_loose','tim_a')" onfocus='focusHeader("allocation")'  value='<?php echo $allocation["tim_a"]["svt"]["additional_loose"]; ?>' /> <a href='#' onclick='window.open("control_tracking.php?control_track=<?php echo $control_id; ?>","control_track","height=550, width=800");'>Track</a></td>
-
-<td><input type=text size=5 name='tim_a_svt_unsold_a' id='tim_a_svt_unsold_a' onkeyup="computeSequence('svt','_unsold_a',event,'tim_b_sjt_unsold_a','tim_a')" onfocus='focusHeader("remittance")'   value='<?php echo $unsold["tim_a"]["svt"]["sealed"]; ?>'   /></td>
-<td><input type=text size=5 name='tim_a_svt_unsold_b' id='tim_a_svt_unsold_b' onkeyup="computeSequence('svt','_unsold_b',event,'tim_b_sjt_unsold_b','tim_a')" onfocus='focusHeader("remittance")'  value='<?php echo $unsold["tim_a"]["svt"]["loose_good"]; ?>'   /></td>
-
-<td><input type=text size=5 name='tim_a_svt_unsold_c' id='tim_a_svt_unsold_c' onkeyup="computeSequence('svt','_unsold_c',event,'tim_b_sjt_unsold_c','tim_a')" onfocus='focusHeader("remittance")'   value='<?php echo $unsold["tim_a"]["svt"]["loose_defective"]; ?>'  /></td>
-<td><input type=text name='tim_a_svt_total' id='tim_a_svt_total' value='<?php echo $sold_tickets["svt"];?>' /></td>
-<td><input type=text name='tim_a_svt_amount' id='tim_a_svt_amount' onkeyup='computeAmount(event,"svt_amount","tim_a")'  value='<?php echo $svt_amount["tim_a"]; ?>' onblur='computeAmount(event,"svd_amount");'  onfocus='focusHeader("ticket_amount")'  /></td>
-
-</tr>
-
-<tr>
-<td rowspan=2>TIM 2</td>
-
-<td>SJT</td>
-<td><input type=text size=5 name='tim_b_sjt_allocation_a' id='tim_b_sjt_allocation_a' onfocus='focusHeader("allocation")' onkeyup="computeSequence('sjt','_allocation_a',event,'tim_b_svt_allocation_a','tim_b')" value='<?php echo $allocation["tim_b"]["sjt"]["initial"]; ?>' /></td>
-<td><input type=text size=5 name='tim_b_sjt_allocation_a_loose' id='tim_b_sjt_allocation_a_loose' onfocus='focusHeader("allocation")'  onkeyup="computeSequence('sjt','_allocation_a_loose',event,'tim_b_svt_allocation_a_loose','tim_b')" value='<?php echo $allocation["tim_b"]["sjt"]["initial_loose"]; ?>' /></td>
-
-<td><input type=text size=5 name='tim_b_sjt_allocation_b' id='tim_b_sjt_allocation_b' onfocus='focusHeader("allocation")'  onkeyup="computeSequence('sjt','_allocation_b',event,'tim_b_svt_allocation_b_loose','tim_b')" value='<?php echo $allocation["tim_b"]["sjt"]["additional"]; ?>' /> <a href='#' onclick='window.open("control_tracking.php?control_track=<?php echo $control_id; ?>","control_track","height=550, width=800");'>Track</a></td>
-<td><input type=text size=5 name='tim_b_sjt_allocation_b_loose' id='tim_b_sjt_allocation_b_loose' onfocus='focusHeader("allocation")'  onkeyup="computeSequence('sjt','_allocation_b_loose',event,'tim_b_svt_allocation_b_loose','tim_b')" value='<?php echo $allocation["tim_b"]["sjt"]["additional_loose"]; ?>' /> <a href='#' onclick='window.open("control_tracking.php?control_track=<?php echo $control_id; ?>","control_track","height=550, width=800");'>Track</a></td>
-
-
-<td><input type=text size=5 name='tim_b_sjt_unsold_a' id='tim_b_sjt_unsold_a' onkeyup="computeSequence('sjt','_unsold_a',event,'tim_b_svt_unsold_a','tim_b')" onfocus='focusHeader("remittance")'  value='<?php echo $unsold["tim_b"]["sjt"]["sealed"]; ?>'  /></td>
-<td><input type=text size=5 name='tim_b_sjt_unsold_b' id='tim_b_sjt_unsold_b' onkeyup="computeSequence('sjt','_unsold_b',event,'tim_b_svt_unsold_b','tim_b')" onfocus='focusHeader("remittance")'    value='<?php echo $unsold["tim_b"]["sjt"]["loose_good"]; ?>' /></td>
-
-<td><input type=text size=5 name='tim_b_sjt_unsold_c' id='tim_b_sjt_unsold_c' onkeyup="computeSequence('sjt','_unsold_c',event,'tim_b_svt_unsold_c','tim_b')"  onfocus='focusHeader("remittance")'   value='<?php echo $unsold["tim_b"]["sjt"]["loose_defective"]; ?>' /></td>
-<td><input type=text name='tim_b_sjt_total' id='tim_b_sjt_total' value='<?php echo $sold_tickets["tim_b"]["sjt"];?>' /></td>
-<td><input type=text name='tim_b_sjt_amount' id='tim_b_sjt_amount' onkeyup='computeAmount(event,"sjt_amount","tim_b")' value='<?php echo $sjt_amount["tim_b"]; ?>'  onfocus='focusHeader("ticket_amount")'   onblur='computeAmount(event,"sjd_amount");' /></td>
-
-</tr>
-
-
-
-
-<tr>
-<td>SVT</td>
-<td><input type=text size=5 name='tim_b_svt_allocation_a' id='tim_b_svt_allocation_a' onfocus='focusHeader("allocation")' onkeyup="computeSequence('svt','_allocation_a',event,'tim_c_sjt_allocation_a','tim_b')" value='<?php echo $allocation["tim_b"]["svt"]["initial"]; ?>' /></td>
-<td><input type=text size=5 name='tim_b_svt_allocation_a_loose' id='tim_b_svt_allocation_a_loose' onfocus='focusHeader("allocation")'  onkeyup="computeSequence('svt','_allocation_a_loose',event,'tim_c_sjt_allocation_a_loose','tim_b')" value='<?php echo $allocation["tim_b"]["svt"]["initial_loose"]; ?>' /></td>
-
-<td><input type=text size=5 name='tim_b_svt_allocation_b' id='tim_b_svt_allocation_b' onkeyup="computeSequence('svt','_allocation_b',event,'tim_c_sjt_allocation_b','tim_b')" onfocus='focusHeader("allocation")'  value='<?php echo $allocation["tim_b"]["svt"]["additional"]; ?>' /> <a href='#' onclick='window.open("control_tracking.php?control_track=<?php echo $control_id; ?>","control_track","height=550, width=800");'>Track</a></td>
-<td><input type=text size=5 name='tim_b_svt_allocation_b_loose' id='tim_b_svt_allocation_b_loose' onkeyup="computeSequence('svt','_allocation_b_loose',event,'tim_c_sjt_allocation_a_loose','tim_b')" onfocus='focusHeader("allocation")'  value='<?php echo $allocation["tim_b"]["svt"]["additional_loose"]; ?>' /> <a href='#' onclick='window.open("control_tracking.php?control_track=<?php echo $control_id; ?>","control_track","height=550, width=800");'>Track</a></td>
-
-<td><input type=text size=5 name='tim_b_svt_unsold_a' id='tim_b_svt_unsold_a' onkeyup="computeSequence('svt','_unsold_a',event,'tim_c_sjt_unsold_a','tim_b')" onfocus='focusHeader("remittance")'   value='<?php echo $unsold["tim_b"]["svt"]["sealed"]; ?>'   /></td>
-<td><input type=text size=5 name='tim_b_svt_unsold_b' id='tim_b_svt_unsold_b' onkeyup="computeSequence('svt','_unsold_b',event,'tim_c_sjt_unsold_b','tim_b')" onfocus='focusHeader("remittance")'  value='<?php echo $unsold["tim_b"]["svt"]["loose_good"]; ?>'   /></td>
-
-<td><input type=text size=5 name='tim_b_svt_unsold_c' id='tim_b_svt_unsold_c' onkeyup="computeSequence('svt','_unsold_c',event,'tim_c_sjt_unsold_c','tim_b')" onfocus='focusHeader("remittance")'   value='<?php echo $unsold["tim_b"]["svt"]["loose_defective"]; ?>'  /></td>
-<td><input type=text name='tim_b_svt_total' id='tim_b_svt_total' value='<?php echo $sold_tickets["tim_b"]["svt"];?>' /></td>
-<td><input type=text name='tim_b_svt_amount' id='tim_b_svt_amount' onkeyup='computeAmount(event,"svt_amount","tim_b")'  value='<?php echo $svt_amount["tim_b"]; ?>' onblur='computeAmount(event,"svd_amount");'  onfocus='focusHeader("ticket_amount")'  /></td>
-
-</tr>
-
-<tr>
-<td rowspan=2>TIM 3</td>
-
-<td>SJT</td>
-<td><input type=text size=5 name='tim_c_sjt_allocation_a' id='tim_c_sjt_allocation_a' onfocus='focusHeader("allocation")' onkeyup="computeSequence('sjt','_allocation_a',event,'tim_c_svt_allocation_a','tim_c')" value='<?php echo $allocation["tim_c"]["sjt"]["initial"]; ?>' /></td>
-<td><input type=text size=5 name='tim_c_sjt_allocation_a_loose' id='tim_c_sjt_allocation_a_loose' onfocus='focusHeader("allocation")'  onkeyup="computeSequence('sjt','_allocation_a_loose',event,'tim_c_svt_allocation_a_loose','tim_c')" value='<?php echo $allocation["tim_c"]["sjt"]["initial_loose"]; ?>' /></td>
-
-<td><input type=text size=5 name='tim_c_sjt_allocation_b' id='tim_c_sjt_allocation_b' onfocus='focusHeader("allocation")'  onkeyup="computeSequence('sjt','_allocation_b',event,'tim_c_svt_allocation_b_loose','tim_c')" value='<?php echo $allocation["tim_c"]["sjt"]["additional"]; ?>' /> <a href='#' onclick='window.open("control_tracking.php?control_track=<?php echo $control_id; ?>","control_track","height=550, width=800");'>Track</a></td>
-<td><input type=text size=5 name='tim_c_sjt_allocation_b_loose' id='tim_c_sjt_allocation_b_loose' onfocus='focusHeader("allocation")'  onkeyup="computeSequence('sjt','_allocation_b_loose',event,'tim_c_svt_allocation_b_loose','tim_c')" value='<?php echo $allocation["tim_c"]["sjt"]["additional_loose"]; ?>' /> <a href='#' onclick='window.open("control_tracking.php?control_track=<?php echo $control_id; ?>","control_track","height=550, width=800");'>Track</a></td>
-
-
-<td><input type=text size=5 name='tim_c_sjt_unsold_a' id='tim_c_sjt_unsold_a' onkeyup="computeSequence('sjt','_unsold_a',event,'tim_c_svt_unsold_a','tim_c')" onfocus='focusHeader("remittance")'  value='<?php echo $unsold["tim_c"]["sjt"]["sealed"]; ?>'  /></td>
-<td><input type=text size=5 name='tim_c_sjt_unsold_b' id='tim_c_sjt_unsold_b' onkeyup="computeSequence('sjt','_unsold_b',event,'tim_c_svt_unsold_b','tim_c')" onfocus='focusHeader("remittance")'    value='<?php echo $unsold["tim_c"]["sjt"]["loose_good"]; ?>' /></td>
-
-<td><input type=text size=5 name='tim_c_sjt_unsold_c' id='tim_c_sjt_unsold_c' onkeyup="computeSequence('sjt','_unsold_c',event,'tim_c_svt_unsold_c','tim_c')"  onfocus='focusHeader("remittance")'   value='<?php echo $unsold["tim_c"]["sjt"]["loose_defective"]; ?>' /></td>
-<td><input type=text name='tim_c_sjt_total' id='tim_c_sjt_total' value='<?php echo $sold_tickets["tim_c"]["sjt"];?>' /></td>
-<td><input type=text name='tim_c_sjt_amount' id='tim_c_sjt_amount' onkeyup='computeAmount(event,"sjt_amount","tim_c")' value='<?php echo $sjt_amount["tim_c"]; ?>'  onfocus='focusHeader("ticket_amount")'   onblur='computeAmount(event,"sjd_amount");' /></td>
-
-</tr>
-
-
-
-
-<tr>
-<td>SVT</td>
-<td><input type=text size=5 name='tim_c_svt_allocation_a' id='tim_c_svt_allocation_a' onfocus='focusHeader("allocation")' onkeyup="computeSequence('svt','_allocation_a',event,'tim_d_sjt_allocation_a','tim_c')" value='<?php echo $allocation["tim_c"]["svt"]["initial"]; ?>' /></td>
-<td><input type=text size=5 name='tim_c_svt_allocation_a_loose' id='tim_c_svt_allocation_a_loose' onfocus='focusHeader("allocation")'  onkeyup="computeSequence('svt','_allocation_a_loose',event,'tim_d_sjt_allocation_a_loose','tim_c')" value='<?php echo $allocation["tim_c"]["svt"]["initial_loose"]; ?>' /></td>
-
-<td><input type=text size=5 name='tim_c_svt_allocation_b' id='tim_c_svt_allocation_b' onkeyup="computeSequence('svt','_allocation_b',event,'tim_d_sjt_allocation_b','tim_c')" onfocus='focusHeader("allocation")'  value='<?php echo $allocation["tim_c"]["svt"]["additional"]; ?>' /> <a href='#' onclick='window.open("control_tracking.php?control_track=<?php echo $control_id; ?>","control_track","height=550, width=800");'>Track</a></td>
-<td><input type=text size=5 name='tim_c_svt_allocation_b_loose' id='tim_c_svt_allocation_b_loose' onkeyup="computeSequence('svt','_allocation_b_loose',event,'tim_d_sjt_allocation_a_loose','tim_c')" onfocus='focusHeader("allocation")'  value='<?php echo $allocation["tim_c"]["svt"]["additional_loose"]; ?>' /> <a href='#' onclick='window.open("control_tracking.php?control_track=<?php echo $control_id; ?>","control_track","height=550, width=800");'>Track</a></td>
-
-<td><input type=text size=5 name='tim_c_svt_unsold_a' id='tim_c_svt_unsold_a' onkeyup="computeSequence('svt','_unsold_a',event,'tim_d_sjt_unsold_a','tim_c')" onfocus='focusHeader("remittance")'   value='<?php echo $unsold["tim_c"]["svt"]["sealed"]; ?>'   /></td>
-<td><input type=text size=5 name='tim_c_svt_unsold_b' id='tim_c_svt_unsold_b' onkeyup="computeSequence('svt','_unsold_b',event,'tim_d_sjt_unsold_b','tim_c')" onfocus='focusHeader("remittance")'  value='<?php echo $unsold["tim_c"]["svt"]["loose_good"]; ?>'   /></td>
-
-<td><input type=text size=5 name='tim_c_svt_unsold_c' id='tim_c_svt_unsold_c' onkeyup="computeSequence('svt','_unsold_c',event,'tim_d_sjt_unsold_c','tim_c')" onfocus='focusHeader("remittance")'   value='<?php echo $unsold["tim_c"]["svt"]["loose_defective"]; ?>'  /></td>
-<td><input type=text name='tim_c_svt_total' id='tim_c_svt_total' value='<?php echo $sold_tickets["tim_c"]["svt"];?>' /></td>
-<td><input type=text name='tim_c_svt_amount' id='tim_c_svt_amount' onkeyup='computeAmount(event,"svt_amount","tim_c")'  value='<?php echo $svt_amount["tim_c"]; ?>' onblur='computeAmount(event,"svd_amount");'  onfocus='focusHeader("ticket_amount")'  /></td>
-
-</tr>
-
-<tr>
-<td rowspan=2>TIM 4</td>
-
-<td>SJT</td>
-<td><input type=text size=5 name='tim_d_sjt_allocation_a' id='tim_d_sjt_allocation_a' onfocus='focusHeader("allocation")' onkeyup="computeSequence('sjt','_allocation_a',event,'tim_d_svt_allocation_a','tim_d')" value='<?php echo $allocation["tim_d"]["sjt"]["initial"]; ?>' /></td>
-<td><input type=text size=5 name='tim_d_sjt_allocation_a_loose' id='tim_d_sjt_allocation_a_loose' onfocus='focusHeader("allocation")'  onkeyup="computeSequence('sjt','_allocation_a_loose',event,'tim_d_svt_allocation_a_loose','tim_d')" value='<?php echo $allocation["tim_d"]["sjt"]["initial_loose"]; ?>' /></td>
-
-<td><input type=text size=5 name='tim_d_sjt_allocation_b' id='tim_d_sjt_allocation_b' onfocus='focusHeader("allocation")'  onkeyup="computeSequence('sjt','_allocation_b',event,'tim_d_svt_allocation_b_loose','tim_d')" value='<?php echo $allocation["tim_d"]["sjt"]["additional"]; ?>' /> <a href='#' onclick='window.open("control_tracking.php?control_track=<?php echo $control_id; ?>","control_track","height=550, width=800");'>Track</a></td>
-<td><input type=text size=5 name='tim_d_sjt_allocation_b_loose' id='tim_d_sjt_allocation_b_loose' onfocus='focusHeader("allocation")'  onkeyup="computeSequence('sjt','_allocation_b_loose',event,'tim_d_svt_allocation_b_loose','tim_d')" value='<?php echo $allocation["tim_d"]["sjt"]["additional_loose"]; ?>' /> <a href='#' onclick='window.open("control_tracking.php?control_track=<?php echo $control_id; ?>","control_track","height=550, width=800");'>Track</a></td>
-
-
-<td><input type=text size=5 name='tim_d_sjt_unsold_a' id='tim_d_sjt_unsold_a' onkeyup="computeSequence('sjt','_unsold_a',event,'tim_d_svt_unsold_a','tim_d')" onfocus='focusHeader("remittance")'  value='<?php echo $unsold["tim_d"]["sjt"]["sealed"]; ?>'  /></td>
-<td><input type=text size=5 name='tim_d_sjt_unsold_b' id='tim_d_sjt_unsold_b' onkeyup="computeSequence('sjt','_unsold_b',event,'tim_d_svt_unsold_b','tim_d')" onfocus='focusHeader("remittance")'    value='<?php echo $unsold["tim_d"]["sjt"]["loose_good"]; ?>' /></td>
-
-<td><input type=text size=5 name='tim_d_sjt_unsold_c' id='tim_d_sjt_unsold_c' onkeyup="computeSequence('sjt','_unsold_c',event,'tim_d_svt_unsold_c','tim_d')"  onfocus='focusHeader("remittance")'   value='<?php echo $unsold["tim_d"]["sjt"]["loose_defective"]; ?>' /></td>
-<td><input type=text name='tim_d_sjt_total' id='tim_d_sjt_total' value='<?php echo $sold_tickets["tim_d"]["sjt"];?>' /></td>
-<td><input type=text name='tim_d_sjt_amount' id='tim_d_sjt_amount' onkeyup='computeAmount(event,"sjt_amount","tim_d")' value='<?php echo $sjt_amount["tim_d"]; ?>'  onfocus='focusHeader("ticket_amount")'   onblur='computeAmount(event,"sjd_amount");' /></td>
-
-</tr>
-
-
-
-
-<tr>
-<td>SVT</td>
-<td><input type=text size=5 name='tim_d_svt_allocation_a' id='tim_d_svt_allocation_a' onfocus='focusHeader("allocation")' onkeyup="computeSequence('svt','_allocation_a',event,'pos_sjt_allocation_a_loose','tim_d')" value='<?php echo $allocation["tim_d"]["svt"]["initial"]; ?>' /></td>
-<td><input type=text size=5 name='tim_d_svt_allocation_a_loose' id='tim_d_svt_allocation_a_loose' onfocus='focusHeader("allocation")'  onkeyup="computeSequence('svt','_allocation_a_loose',event,'pos_sjt_allocation_b','tim_d')" value='<?php echo $allocation["tim_d"]["svt"]["initial_loose"]; ?>' /></td>
-
-<td><input type=text size=5 name='tim_d_svt_allocation_b' id='tim_d_svt_allocation_b' onkeyup="computeSequence('svt','_allocation_b',event,'pos_sjt_allocation_b_loose','tim_d')" onfocus='focusHeader("allocation")'  value='<?php echo $allocation["tim_d"]["svt"]["additional"]; ?>' /> <a href='#' onclick='window.open("control_tracking.php?control_track=<?php echo $control_id; ?>","control_track","height=550, width=800");'>Track</a></td>
-<td><input type=text size=5 name='tim_d_svt_allocation_b_loose' id='tim_d_svt_allocation_b_loose' onkeyup="computeSequence('svt','_allocation_b_loose',event,'pos_sjt_unsold_a','tim_d')" onfocus='focusHeader("allocation")'  value='<?php echo $allocation["tim_d"]["svt"]["additional_loose"]; ?>' /> <a href='#' onclick='window.open("control_tracking.php?control_track=<?php echo $control_id; ?>","control_track","height=550, width=800");'>Track</a></td>
-
-<td><input type=text size=5 name='tim_d_svt_unsold_a' id='tim_d_svt_unsold_a' onkeyup="computeSequence('svt','_unsold_a',event,'pos_sjt_unsold_b','tim_d')" onfocus='focusHeader("remittance")'   value='<?php echo $unsold["tim_d"]["svt"]["sealed"]; ?>'   /></td>
-<td><input type=text size=5 name='tim_d_svt_unsold_b' id='tim_d_svt_unsold_b' onkeyup="computeSequence('svt','_unsold_b',event,'pos_sjt_unsold_c','tim_d')" onfocus='focusHeader("remittance")'  value='<?php echo $unsold["tim_d"]["svt"]["loose_good"]; ?>'   /></td>
-
-<td><input type=text size=5 name='tim_d_svt_unsold_c' id='tim_d_svt_unsold_c' onkeyup="computeSequence('svt','_unsold_c',event,'tim_d_svt_unsold_c','tim_d')" onfocus='focusHeader("remittance")'   value='<?php echo $unsold["tim_d"]["svt"]["loose_defective"]; ?>'  /></td>
-<td><input type=text name='tim_d_svt_total' id='tim_d_svt_total' value='<?php echo $sold_tickets["tim_d"]["svt"];?>' /></td>
-<td><input type=text name='tim_d_svt_amount' id='tim_d_svt_amount' onkeyup='computeAmount(event,"svt_amount","tim_d")'  value='<?php echo $svt_amount["tim_d"]; ?>' onblur='computeAmount(event,"svd_amount");'  onfocus='focusHeader("ticket_amount")'  /></td>
-
-</tr>
-
-<tr>
-<td colspan=2>Total</td>
+<td>Total</td>
 <td><input type=text size=5 name='total_allocation_a' id='total_allocation_a' value='<?php echo $total_allocation_a; ?>' /></td>
 <td><input type=text size=5 name='total_allocation_a_loose' id='total_allocation_a_loose'  value='<?php echo $total_allocation_a_loose; ?>' /></td>
 
@@ -1579,17 +1505,20 @@ if($nm>0){
 	$svd_adjustment=$row['svd'];
 	$c_adjustment=$row['c'];
 	$ot_adjustment=$row['ot'];
-	
+	$mismatch_adjustment=$row['mismatch'];
 	$cash_adjustments=0;
 	//$cash_adjustments+=$fare_adjustment*1;
+	/*
 	$cash_adjustments+=$sjt_adjustment*1;
 	$cash_adjustments+=$sjd_adjustment*1;
 	$cash_adjustments+=$svt_adjustment*1;
 	$cash_adjustments+=$svd_adjustment*1;
 	$cash_adjustments+=$c_adjustment*1;
+	*/
+
 	$cash_adjustments+=$ot_adjustment*1;
 	
-	
+	$cash_adjustments+=$mismatch_adjustment*1;
 	
 	
 }
@@ -1629,39 +1558,23 @@ $cash_revenue_2=$cash_revenue_1+$cash_adjustments;
 <tr class='header'><td colspan=2><b>Total Amount</b></td><td><input type=text name='total_amount' id='total_amount' value='<?php echo $cash_revenue_1; ?>' /></td>
 <tr class='subheader'><td colspan=3 align=center>Fare Adjustment (Add)</td></tr>
 <tr class='category'><td>Type</td><td>Qty.</td><td>Amount</td></tr>
+
+
+
 <tr>
-<td>SJT</td>
-<td><input type=text size=10 name='adjustment_tickets_2' id='adjustment_tickets_2' onkeyup='computeTicketRevenue()'   value='<?php echo $sjt_adjustment_t; ?>' /></td>
-<td><input type=text name='adjustment_2' id='adjustment_2' onkeyup='computeCashRevenue()' value='<?php echo $sjt_adjustment; ?>'  /></td>
+<td colspan=2>Mismatch</td>
+<td><input type=text name='adjustment_6' id='adjustment_6' onkeyup='computeCashRevenue()' value='<?php echo $mismatch_adjustment; ?>'  /></td>
 </tr>
 <tr>
-<td>SJD</td>
-<td><input type=text size=10 name='adjustment_tickets_3' id='adjustment_tickets_3' onkeyup='computeTicketRevenue()' value='<?php echo $sjd_adjustment_t; ?>'  /></td>
-<td><input type=text name='adjustment_3' id='adjustment_3' onkeyup='computeCashRevenue()' value='<?php echo $sjd_adjustment; ?>'  /></td>
-</tr>
+
+
+
 <tr>
-<td>SVT</td>
-<td><input type=text size=10 name='adjustment_tickets_4' id='adjustment_tickets_4' onkeyup='computeTicketRevenue()' value='<?php echo $svt_adjustment_t; ?>'  /></td>
-<td><input type=text name='adjustment_4' id='adjustment_4' onkeyup='computeCashRevenue()' value='<?php echo $svt_adjustment; ?>'  /></td>
-</tr>
-<tr>
-<td>SVD</td>
-<td><input type=text size=10 name='adjustment_tickets_5' id='adjustment_tickets_5' onkeyup='computeTicketRevenue()' value='<?php echo $svd_adjustment_t; ?>'  /></td>
-<td><input type=text name='adjustment_5' id='adjustment_5' onkeyup='computeCashRevenue()' value='<?php echo $svd_adjustment; ?>'  /></td>
-</tr>
-<tr>
-<td>C</td>
-<td><input type=text size=10 name='adjustment_tickets_6' id='adjustment_tickets_6' onkeyup='computeTicketRevenue()' value='<?php echo $c_adjustment_t; ?>'  /></td>
-<td><input type=text name='adjustment_6' id='adjustment_6' onkeyup='computeCashRevenue()' value='<?php echo $c_adjustment; ?>'  /></td>
-</tr>
-<tr>
-<td>OT</td>
-<td><input type=text size=10 name='adjustment_tickets_7' id='adjustment_tickets_7' onkeyup='computeTicketRevenue()' value='<?php echo $ot_adjustment_t; ?>' /></td>
+<td colspan=2>Excess Time</td>
 <td><input type=text name='adjustment_7' id='adjustment_7' onkeyup='computeCashRevenue()' value='<?php echo $ot_adjustment; ?>'  /></td>
 </tr>
 <tr>
-<td><b>Subtotal</b></td>
-<td><input type=text size=10 name='tickets_sub_total' id='tickets_sub_total' value='<?php echo $tickets_adjustments; ?>' /></td>
+<td colspan=2><b>Subtotal</b></td>
 <td><input type=text name='cash_sub_total' id='cash_sub_total'  value='<?php echo $cash_adjustments; ?>' /></td></tr>
 </tr>
 <tr>
@@ -1695,10 +1608,10 @@ if($nm>0){
 <table class='controlTable2' width=80%>
 <tr class='header'><th colspan=3>Ticket Discrepancy</th></tr>
 <tr class='subheader'><th>Ticket</th><th>Overage</th><th>Shortage</th></tr>
-<tr class='grid'><th>SJT</th><td><?php echo $discrepancy['overage']['sjt']; ?></td><td><?php echo $discrepancy['shortage']['sjt']; ?></td></tr>
-<tr class='category'><th>SJD</th><td><?php echo $discrepancy['overage']['sjd']; ?></td><td><?php echo $discrepancy['shortage']['sjd']; ?></td></tr>
-<tr class='grid'><th>SVT</th><td><?php echo $discrepancy['overage']['svt']; ?></td><td><?php echo $discrepancy['shortage']['svt']; ?></td></tr>
-<tr class='category'><th>SVD</th><td><?php echo $discrepancy['overage']['svd']; ?></td><td><?php echo $discrepancy['shortage']['svd']; ?></td></tr>
+<tr class='grid'><th>SJT</th><td align=center><?php echo $discrepancy['overage']['sjt']; ?></td><td align=center><?php echo $discrepancy['shortage']['sjt']; ?></td></tr>
+<tr class='category'><th>SJD</th><td align=center><?php echo $discrepancy['overage']['sjd']; ?></td><td align=center><?php echo $discrepancy['shortage']['sjd']; ?></td></tr>
+<tr class='grid'><th>SVT</th><td align=center><?php echo $discrepancy['overage']['svt']; ?></td><td align=center><?php echo $discrepancy['shortage']['svt']; ?></td></tr>
+<tr class='category'><th>SVD</th><td align=center><?php echo $discrepancy['overage']['svd']; ?></td><td align=center><?php echo $discrepancy['shortage']['svd']; ?></td></tr>
 <tr><th colspan=3><input type=button value='Add Discrepancy' onclick='window.open("discrepancy_ticket.php?tID=<?php echo $control_id; ?>&tsID=<?php echo $ticketSellerName; ?>","discrepancy","height=350, width=400")' /></th></tr>
 </table>
 
@@ -1817,11 +1730,11 @@ if($nm>0){
 	$overage=$row['overage'];
 //	$add_others=$row['add_others'];
 //	$refund=$row['refund'];
-	$unpaid_storage=$row['unpaid_storage'];
+	$unpaid_shortage=$row['unpaid_shortage'];
 //	$discount=$row['discount'];
 //	$less_others=$row['less_storage'];
 
-
+	$issuance_fee=$row['issuance_fee'];
 	
 	$cash_revenue_3+=$overage;
 //	$cash_revenue_3+=$add_others;
@@ -1831,6 +1744,8 @@ if($nm>0){
 //	$cash_revenue_3-=$less_others;
 //	$ot_amount=$row['ot'];
 //	$cash_revenue_3+=$ot_amount;
+
+	$tvm_refund_cash=$row['tvm_refund'];
 }
 
 $sql="select * from discount where control_id='".$control_id."'";
@@ -1859,8 +1774,10 @@ if($nm>0){
 	$sj_refund_amount=$row['sj_amount'];
 	$sv_refund_amount=$row['sv_amount'];
 
+	$tvm_refund_amount=$row['tvm'];
+
 	$cash_revenue_3-=$sj_refund_amount;
-	$cash_revenue_3-=$sv_refund_amount;
+	$cash_revenue_3-=$tvm_refund_amount;
 	
 	
 }
@@ -1873,6 +1790,7 @@ if($nm>0){
 	$row=$rs->fetch_assoc();
 	$sj_unreg=$row['sj'];
 	$sv_unreg=$row['sv'];
+	$issuance_unreg=$row['issuance_fee'];
 
 	$cash_revenue_3+=$sj_unreg;
 	$cash_revenue_3+=$sv_unreg;
@@ -1887,38 +1805,54 @@ if($nm>0){
 <tr class='subheader'><td colspan=2 align=center>Adjustments (Add/Less)</td></tr>
 <tr class='category'><th colspan=2>Add</th></tr>
 <tr class='grid'><th>Cash Advance</th><td><input type=text name='addition_1' id='addition_1' onkeyup='computeRemittance()' value='<?php echo $cash_advance; ?>' /> <a href='#' onclick='window.open("control_tracking.php?control_track=<?php echo $control_id; ?>","control_track","height=550, width=800");'>Track</a></td></tr>
+<tr class='grid'><th>Lost (SJT)</th><td><input type=text name='unreg_sj' id='unreg_sj' onkeyup='computeRemittance()' value='<?php echo $sj_unreg; ?>'   /></td></tr>
+
+<tr class='grid'><th>Lost (SVC)</th><td><input type=text name='unreg_sv' id='unreg_sv' onkeyup='computeRemittance()' value='<?php echo $sv_unreg; ?>'   /></td></tr>
+
+
+<tr class='grid'><th>Issuance Fee</th><td><input type=text name='issuance_fee' id='issuance_fee' onkeyup='computeRemittance()' value='<?php echo $issuance_unreg; ?>'  /></td></tr>
+
 <tr class='grid'><th>Overage</th><td><input type=text name='addition_2' id='addition_2' onkeyup='computeRemittance()' value='<?php echo $overage; ?>'  /></td></tr>
 <!--
 <tr><th>OT Amount</th><td><input type=text name='addition_3' id='addition_3' onkeyup='computeRemittance()'  /></td></tr>
 -->
-<tr class='header'><th colspan=2>Others (Unreg. Sale)</th></tr>
-<tr class='category'>
-<th>SJ</th>
-<th>SV</th>
-
-<tr class='grid'>
-<td><input type=text name='unreg_sj' id='unreg_sj' onkeyup='computeRemittance()' value='<?php echo $sj_unreg; ?>'   /></td>
-<td><input type=text name='unreg_sv' id='unreg_sv' onkeyup='computeRemittance()' value='<?php echo $sv_unreg; ?>'   /></td></tr>
 </table>
 <table class='controlTable2'>
 <tr class='header'><th colspan=2>Less</th></tr>
-<tr class='subheader'><th colspan=2>Refund</th></tr>
+
+
 <tr class='category'>
-<th>Tickets - SJ</th><th>Tickets - SV</th>
-</tr>
-<tr class='grid'>
-<td><input type=text name='refund_sj' id='refund_sj' onkeyup='computeRemittance()' value='<?php echo $sj_refund; ?>'  /></td>
-<td><input type=text name='refund_sv' id='refund_sv' onkeyup='computeRemittance()' value='<?php echo $sv_refund; ?>'  /></td>
+
+<th>Refund Quantity (SJT)</th>
+<td><input type=text name='refund_sj' id='refund_sj'  value='<?php echo $sj_refund; ?>'  /></td>
+
+
 </tr>
 
 <tr class='category'>
-<th>SJ Amount</th><th>SV Amount</th>
+
+<th>Refund Quantity (TVM)</th>
+<td><input type=text name='refund_sv' id='refund_sv'  value='<?php echo $sv_refund; ?>'  /></td>
+
+
 </tr>
 
-<tr class='grid'>
+<tr class='category'>
+
+<th>Refund (SJT)</th>
 <td><input type=text name='refund_sj_amount' id='refund_sj_amount' onkeyup='computeRemittance()' value='<?php echo $sj_refund_amount; ?>'  /></td>
-<td><input type=text name='refund_sv_amount' id='refund_sv_amount' onkeyup='computeRemittance()' value='<?php echo $sv_refund_amount; ?>'  /></td>
+
+
 </tr>
+<tr class='category'>
+
+
+<th>TVM Refund</th>
+<td><input type=text name='refund_tvm_amount' id='refund_tvm_amount' onkeyup='computeRemittance()' value='<?php echo $tvm_refund_amount; ?>'  /></td>
+
+
+</tr>
+
 <tr>
 <td colspan=2></td>
 </tr>
@@ -1927,12 +1861,15 @@ if($nm>0){
 <td colspan=2></td>
 </tr>
 
-<tr class='subheader'><th colspan=2>Discount</th>
+<tr class='header'><th colspan=2>Add</th></tr>
 
-<tr class='category'><th>SJ Amount</th><th>SV Amount</th></tr>
-<tr class='grid'>
-<td><input type=text name='discount_sj' id='discount_sj' onkeyup='computeRemittance()' value='<?php echo $sj_discount; ?>'  /></td>
-<td><input type=text name='discount_sv' id='discount_sv' onkeyup='computeRemittance()' value='<?php echo $sv_discount; ?>'  /></td></tr>
+<tr class='category'>
+
+<th>TVM Refund</th>
+<td><input type=text name='tvm_refund_cash' id='tvm_refund_cash' onkeyup='computeRemittance()' value='<?php echo $tvm_refund_cash; ?>'  /></td>
+
+
+</tr>
 <tr>
 <td colspan=2 align=center><input type=hidden name='adjustments_2_control_id' value='<?php echo $control_id; ?>' />
 <!--<input type=submit value='Save Adjustments' />-->&nbsp;

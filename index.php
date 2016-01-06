@@ -8,7 +8,7 @@ require("db.php");
 ?>
 <body>
 <table class='header' align=center>
-<tr><th><h2>Guadalupe</h2></th></tr>
+<tr><th><h2>Ortigas</h2></th></tr>
 </table>
 <?php 
 if(isset($_POST['username'])){

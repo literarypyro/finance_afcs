@@ -20,6 +20,9 @@ $log_id=$_SESSION['log_id'];
 //$transaction_id=$_GET['trans'];
 //$cash_transfer_id=$_GET['cash'];
 ?>
+
+
+
 <?php
 ini_set("date.timezone","Asia/Kuala_Lumpur");
 ?>
@@ -75,10 +78,8 @@ $shiftName=$shiftRow['shift_name'];
 	if($nm>0){
 		$row=$rs->fetch_assoc();
 		$revolvingTotal=$row['revolving_fund'];
-		$sjt_net_revenue=$row['sjt_net_revenue'];
-		$svc_net_revenue=$row['svc_net_revenue'];
-
-		$grandTotal=($row['sjt_net_revenue']*1)+($row['svc_net_revenue']*1)+($row['revolving_fund']*1);
+		$depositTotal=$row['sjt_net_revenue']+$row['svc_net_revenue'];
+		$grandTotal=($row['sjt_net_revenue']+$row['svc_net_revenue'])+($row['revolving_fund']*1);
 	}
 	else {
 
@@ -87,16 +88,14 @@ $shiftName=$shiftRow['shift_name'];
 		$rs2=$db->query($alternate);
 		$row=$rs2->fetch_assoc();
 		$revolvingTotal=$row['revolving_fund'];
-		$sjt_net_revenue=$row['sjt_net_revenue'];
-		$svc_net_revenue=$row['svc_net_revenue'];
-
+		$depositTotal=$row['sjt_net_revenue']+$row['svc_net_revenue'];
 //		$grandTotal=($row['for_deposit']*1)+($row['revolving_fund']*1);
 
 	}		
 	
 	$rowCount+=6;
 	addContent(setRange("B".$rowCount,"C".$rowCount),$excel,$logStation,"true",$ExWs);
-	addContent(setRange("H".$rowCount,"M".$rowCount),$excel,$logDate,"true",$ExWs);
+	addContent(setRange("G".$rowCount,"K".$rowCount),$excel,$logDate,"true",$ExWs);
 
 	$rowCount++;
 	addContent(setRange("B".$rowCount,"C".$rowCount),$excel,$shiftName,"true",$ExWs);
@@ -105,12 +104,11 @@ $shiftName=$shiftRow['shift_name'];
 	
 	addContent(setRange("B".$rowCount,"B".$rowCount),$excel,"Beginning Balance","true",$ExWs);
 
-	addContent(setRange("O".$rowCount,"O".$rowCount),$excel,$revolvingTotal,"true",$ExWs);
-	addContent(setRange("P".$rowCount,"P".$rowCount),$excel,$sjt_net_revenue,"true",$ExWs);
-	addContent(setRange("Q".$rowCount,"Q".$rowCount),$excel,$svc_net_revenue,"true",$ExWs);
+	addContent(setRange("M".$rowCount,"M".$rowCount),$excel,$revolvingTotal,"true",$ExWs);
+	addContent(setRange("N".$rowCount,"N".$rowCount),$excel,$depositTotal,"true",$ExWs);
 	
 
-	addContent(setRange("R".$rowCount,"S".$rowCount),$excel,"=O".$rowCount."+P".$rowCount."+Q".$rowCount,"true",$ExWs);
+	addContent(setRange("O".$rowCount,"O".$rowCount),$excel,"=M".$rowCount."+N".$rowCount,"true",$ExWs);
 
 	$rowCount++;
 
@@ -131,7 +129,7 @@ for($i=0;$i<$nm;$i++){
 	
 	$type=$row['transaction_type'];
 	$log_type=$row['log_type'];
-
+	
 	if($row['reference_id']==""){
 	$remarks="";
 	}
@@ -152,8 +150,7 @@ for($i=0;$i<$nm;$i++){
 		
 		$cashRow=$cashRS->fetch_assoc();	
 		$deposit_type=$cashRow['type'];
-		$account_type=$cashRow['account_type'];
-
+		
 	}
 	else {
 	
@@ -186,11 +183,8 @@ for($i=0;$i<$nm;$i++){
 				$ticketRow=$ticketRS->fetch_assoc();
 				
 				$revolving=$cashRow['total'];
-				$sjt_net_revenue=$cashRow['sjt_net_revenue'];
-				
-				$svc_net_revenue=$cashRow['svc_net_revenue'];
-
-				$total=$revolving*1+$sjt_net_revenue*1+$svc_net_revenue*1;
+				$deposit=$cashRow['sjt_net_revenue'];
+				$total=$revolving*1+$deposit*1;
 			}
 			/*
 			else if($log_type=="control"){
@@ -233,15 +227,14 @@ for($i=0;$i<$nm;$i++){
 				}
 			$cashStation=$cashRow['station'];	
 			
-			$ticketSellerSQL="select * from ticket_seller where id='".$cashRow['ticket_seller']."'";		
+			$ticketSellerSQL="select * from ticket_seller where id='".trim($cashRow['ticket_seller'])."'";		
 
 			$ticketRS=$db->query($ticketSellerSQL);
 			$ticketRow=$ticketRS->fetch_assoc();
 			
 			$revolving=$cashRow['total'];
-			$sjt_net_revenue=$cashRow['sjt_net_revenue'];
-			$svc_net_revenue=$cashRow['svc_net_revenue'];
-			$total=$revolving*1+$sjt_net_revenue*1+$svc_net_revenue*1;
+			$deposit=$cashRow['net_revenue'];
+			$total=$revolving*1+$deposit*1;
 		
 		}
 		
@@ -250,7 +243,6 @@ for($i=0;$i<$nm;$i++){
 
 	if($type=="deposit")
 	{ 
-
 		addContent(setRange("B".$rowCount,"B".$rowCount),$excel,"PNB Deposit - ".strtoupper($deposit_type),"true",$ExWs);	
 
 
@@ -316,21 +308,13 @@ for($i=0;$i<$nm;$i++){
 
 	if($type=="remittance"){
 		addContent(setRange("D".$rowCount,"D".$rowCount),$excel,$revolving,"true",$ExWs);
-		addContent(setRange("E".$rowCount,"E".$rowCount),$excel,$sjt_net_revenue,"true",$ExWs);
-		addContent(setRange("F".$rowCount,"F".$rowCount),$excel,$svc_net_revenue,"true",$ExWs);
+		addContent(setRange("E".$rowCount,"E".$rowCount),$excel,$deposit,"true",$ExWs);
+		addContent(setRange("F".$rowCount,"G".$rowCount),$excel,"=D".$rowCount."+E".$rowCount,"true",$ExWs);
 
 
-
-
-		addContent(setRange("G".$rowCount,"H".$rowCount),$excel,"=D".$rowCount."+E".$rowCount."+F".$rowCount,"true",$ExWs);
-
-
-		addContent(setRange("O".$rowCount,"O".$rowCount),$excel,"=D".$rowCount."+O".($rowCount2),"true",$ExWs);
-		addContent(setRange("P".$rowCount,"P".$rowCount),$excel,"=E".$rowCount."+P".($rowCount2),"true",$ExWs);
-		addContent(setRange("Q".$rowCount,"Q".$rowCount),$excel,"=F".$rowCount."+Q".($rowCount2),"true",$ExWs);
-
-		addContent(setRange("R".$rowCount,"R".$rowCount),$excel,"=O".$rowCount."+P".$rowCount."+Q".$rowCount,"true",$ExWs);
-
+		addContent(setRange("M".$rowCount,"M".$rowCount),$excel,"=D".$rowCount."+M".($rowCount2),"true",$ExWs);
+		addContent(setRange("N".$rowCount,"N".$rowCount),$excel,"=E".$rowCount."+N".($rowCount2),"true",$ExWs);
+		addContent(setRange("O".$rowCount,"O".$rowCount),$excel,"=M".$rowCount."+N".$rowCount,"true",$ExWs);
 
 		$overageSQL="select * from discrepancy where transaction_id='".$transaction_id."'";
 		$overageRS=$db->query($overageSQL);
@@ -350,58 +334,35 @@ for($i=0;$i<$nm;$i++){
 			$overageLabel=0;
 		}		
 		
-		addContent(setRange("I".$rowCount,"J".$rowCount),$excel,$overageLabel,"true",$ExWs);
+		addContent(setRange("H".$rowCount,"H".$rowCount),$excel,$overageLabel,"true",$ExWs);
 		
 		
 	}		
 	else if($type=="allocation"){	
-		addContent(setRange("K".$rowCount,"K".$rowCount),$excel,$revolving,"true",$ExWs);
-		addContent(setRange("L".$rowCount,"L".$rowCount),$excel,$sjt_net_revenue,"true",$ExWs);
-		addContent(setRange("M".$rowCount,"M".$rowCount),$excel,$svc_net_revenue,"true",$ExWs);
-
-		addContent(setRange("N".$rowCount,"N".$rowCount),$excel,"=K".$rowCount."+L".$rowCount."+M".$rowCount,"true",$ExWs);
+		addContent(setRange("J".$rowCount,"J".$rowCount),$excel,$revolving,"true",$ExWs);
+		addContent(setRange("K".$rowCount,"K".$rowCount),$excel,$deposit,"true",$ExWs);
+		addContent(setRange("L".$rowCount,"L".$rowCount),$excel,"=J".$rowCount."+K".$rowCount,"true",$ExWs);
 
 
-		addContent(setRange("O".$rowCount,"O".$rowCount),$excel,"=O".($rowCount2)."-K".($rowCount*1),"true",$ExWs);
-		addContent(setRange("P".$rowCount,"P".$rowCount),$excel,"=P".($rowCount2)."+E".($rowCount*1)."-L".($rowCount*1),"true",$ExWs);
-		addContent(setRange("Q".$rowCount,"Q".$rowCount),$excel,"=Q".($rowCount2)."+F".($rowCount*1)."-M".($rowCount*1),"true",$ExWs);
-
-
-
-		addContent(setRange("R".$rowCount,"S".$rowCount),$excel,"=O".($rowCount)."+P".$rowCount."+Q".$rowCount,"true",$ExWs);
+		addContent(setRange("M".$rowCount,"M".$rowCount),$excel,"=M".($rowCount2)."-J".($rowCount*1),"true",$ExWs);
+		addContent(setRange("N".$rowCount,"N".$rowCount),$excel,"=N".($rowCount2)."+E".($rowCount*1)."-K".($rowCount*1),"true",$ExWs);
+		addContent(setRange("O".$rowCount,"O".$rowCount),$excel,"=M".($rowCount)."+N".$rowCount,"true",$ExWs);
 	
 	}
 	else if($type=="deposit"){
 		
 		//addContent(setRange("D".$rowCount,"D".$rowCount),$excel,$revolving,"true",$ExWs);
-
-		
-		if($account_type=="sjt"){
-
-			addContent(setRange("L".$rowCount,"L".$rowCount),$excel,$cashRow['amount'],"true",$ExWs);
-
-
-		}
-		else if($account_type=="svc"){
-
-			addContent(setRange("M".$rowCount,"M".$rowCount),$excel,$cashRow['amount'],"true",$ExWs);
-
-		}
-		addContent(setRange("N".$rowCount,"N".$rowCount),$excel,"=L".$rowCount."+M".$rowCount,"true",$ExWs);
-
-
+		addContent(setRange("K".$rowCount,"K".$rowCount),$excel,$cashRow['amount'],"true",$ExWs);
+		addContent(setRange("L".$rowCount,"L".$rowCount),$excel,"=K".$rowCount,"true",$ExWs);
 	
-		addContent(setRange("O".$rowCount,"O".$rowCount),$excel,"=O".($rowCount2),"true",$ExWs);
-		addContent(setRange("P".$rowCount,"P".$rowCount),$excel,"=P".$rowCount2."-L".($rowCount*1),"true",$ExWs);
-		addContent(setRange("Q".$rowCount,"Q".$rowCount),$excel,"=Q".$rowCount2."-M".($rowCount*1),"true",$ExWs);
-
-
-		addContent(setRange("R".$rowCount,"R".$rowCount),$excel,"=O".$rowCount."+P".$rowCount."+Q".$rowCount,"true",$ExWs);
+		addContent(setRange("M".$rowCount,"M".$rowCount),$excel,"=M".($rowCount2),"true",$ExWs);
+		addContent(setRange("N".$rowCount,"N".$rowCount),$excel,"=N".$rowCount2."-K".($rowCount*1),"true",$ExWs);
+		addContent(setRange("O".$rowCount,"O".$rowCount),$excel,"=M".$rowCount."+N".$rowCount,"true",$ExWs);
 	
 	
 	}
 
-	addContent(setRange("T".$rowCount,"U".$rowCount),$excel,$remarks,"true",$ExWs);
+	addContent(setRange("Q".$rowCount,"R".$rowCount),$excel,$remarks,"true",$ExWs);
 	
 	if($a==29){
 		$rowCount2=$rowCount;
@@ -436,16 +397,11 @@ if($nm>0){
 	$cTR=$cTransferRS->fetch_assoc();
 	$transaction_id=$row['transaction_id'];	
 	$revolvingTransfer=$cTR['total'];
-	$sjtNetTransfer=$cTR['sjt_net_revenue'];
-	$svcNetTransfer=$cTR['svc_net_revenue'];
-
-
-	$totalTransfer=$revolvingTransfer+$sjtNetTransfer+$svcNetTransfer;
+	$depositTransfer=$cTR['sjt_net_revenue'];
+	$totalTransfer=$revolvingTransfer+$depositTransfer;
 	
 	$revolvingTotal-=$revolvingTransfer;
-	$sjtTotal-=$sjtNetTransfer;
-	$svcTotal-=$svcNetTransfer;	
-
+	$depositTotal-=$depositTransfer;
 	$displayTotal-=$totalTransfer;
 	$remarks=$cTR['reference_id'];
 	$edit_id=$row['id'];
@@ -464,9 +420,9 @@ if($nm>0){
 	$origin_ca=$userRow['lastName'].", ".$userRow['firstName'];	
 
 	
-	addContent(setRange("M31","M31"),$excel,number_format($totalTransfer,2),"true",$ExWs);
+	addContent(setRange("K31","K31"),$excel,number_format($totalTransfer,2),"true",$ExWs);
 	addContent(setRange("B33","D33"),$excel,$origin_ca,"true",$ExWs);
-	addContent(setRange("I33","M33"),$excel,$destination_ca,"true",$ExWs);
+	addContent(setRange("H33","K33"),$excel,$destination_ca,"true",$ExWs);
 	
 	
 	
@@ -476,7 +432,7 @@ if($nm>0){
 
 
 
-	addContent(setRange("T7","T7"),$excel,$pp,"true",$ExWs);
+	addContent(setRange("Q7","Q7"),$excel,$pp,"true",$ExWs);
 
 	$userSQL="select * from login where username='".$_SESSION['username']."'";
 	$userRS=$db->query($userSQL);
@@ -484,14 +440,14 @@ if($nm>0){
 	
 	$user_fullname=$userRow['lastName'].", ".$userRow['firstName'];
 	
-	addContent(setRange("K37","N37"),$excel,"Printed by: ".$user_fullname,"true",$ExWs);
+	addContent(setRange("J37","L37"),$excel,"Printed by: ".$user_fullname,"true",$ExWs);
 	$timePrinted=date("Y-m-d H:i:s");
 	$timePrintStamp=date("H:iA",strtotime($timePrinted));
 	$datePrintStamp=date("m/d/Y",strtotime($timePrinted));
 	
-	addContent(setRange("O37","Q37"),$excel,"Time Printed: ".$timePrintStamp,"true",$ExWs);
+	addContent(setRange("M37","N37"),$excel,"Time Printed: ".$timePrintStamp,"true",$ExWs);
 	
-	addContent(setRange("R37","U37"),$excel,"Date Printed: ".$datePrintStamp,"true",$ExWs);
+	addContent(setRange("O37","R37"),$excel,"Date Printed: ".$datePrintStamp,"true",$ExWs);
 	
 ?>	
 	

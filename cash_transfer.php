@@ -42,11 +42,7 @@ if((isset($_POST['cash_total']))&&($_POST['cash_total']>0)){
 	
 	$total=$_POST['cash_total'];
 	$totalWords=$_POST['total_in_pesos'];
-
-	$sjt_net_revenue=$_POST['sjt_net_revenue'];
-	$svc_net_revenue=$_POST['svc_net_revenue'];
-
-
+	$net=$_POST['sjt_net_revenue'];
 	$station_entry=$_POST['station'];
 	
 	$unit=$_POST['unit'];
@@ -64,8 +60,6 @@ if((isset($_POST['cash_total']))&&($_POST['cash_total']>0)){
 	
 	if($_POST['form_action']=="insert"){
 		$sql="insert into transaction(date,log_id,log_type,transaction_type,reference_id) values ('".$date."','".$log_id."','cash','".$type."','".$reference_id."')";
-		
-
 		$rs=$db->query($sql);
 
 		$insert_id=$db->insert_id;
@@ -79,9 +73,9 @@ if((isset($_POST['cash_total']))&&($_POST['cash_total']>0)){
 		$revolving=$_POST['revolving_remittance'];
 		
 		$sql="insert into cash_transfer(log_id,time,ticket_seller,cash_assistant,type,";
-		$sql.="transaction_id,total_in_words,total,sjt_net_revenue,svc_net_revenue,station,reference_id,unit,destination_ca) values ";
+		$sql.="transaction_id,total_in_words,total,sjt_net_revenue,station,reference_id,unit,destination_ca) values ";
 		$sql.="('".$log_id."','".$date."','".$ticket_seller."','".$_POST['cash_assistant']."','".$type."',";
-		$sql.="'".$transaction_id."','".$totalWords."','".$revolving."','".$sjt_net_revenue."','".$svc_net_revenue."','".$station_entry."','".$reference_id."','".$unit."','".$destination_ca."')";
+		$sql.="'".$transaction_id."','".$totalWords."','".$revolving."','".$net."','".$station_entry."','".$reference_id."','".$unit."','".$destination_ca."')";
 
 		$rs=$db->query($sql);
 		$insert_id=$db->insert_id;
@@ -174,11 +168,11 @@ if((isset($_POST['cash_total']))&&($_POST['cash_total']>0)){
 			$reference_id=$_POST['reference_id'];	
 			
 	
-			$sql="update cash_transfer set ticket_seller='".$ticket_seller."',total='".$revolving."',net_revenue='".$net."',total_in_words='".$totalWords."',station='".$station_entry."',type='".$type."',unit='".$unit."', destination_ca='".$destination_ca."',reference_id='".$reference_id."' where transaction_id='".$transaction_id."'";
+			$sql="update cash_transfer set ticket_seller='".$ticket_seller."',total='".$revolving."',sjt_net_revenue='".$net."',total_in_words='".$totalWords."',station='".$station_entry."',type='".$type."',unit='".$unit."', destination_ca='".$destination_ca."',reference_id='".$reference_id."' where transaction_id='".$transaction_id."'";
 			$rs=$db->query($sql);
 			//			echo $sql;
 			//			$sql="insert into cash_transfer(log_id,time,ticket_seller,cash_assistant,type,";
-//			$sql.="transaction_id,total_in_words,total,net_revenue,station,reference_id) values ";
+//			$sql.="transaction_id,total_in_words,total,sjt_net_revenue,station,reference_id) values ";
 //			$sql.="('".$log_id."','".$date."','".$ticket_seller."','".$_POST['cash_assistant']."','".$type."',";
 //			$sql.="'".$transaction_id."','".$totalWords."','".$revolving."','".$net."','".$station_entry."','".$reference_id."')";
 
@@ -257,7 +251,13 @@ if((isset($_POST['cash_total']))&&($_POST['cash_total']>0)){
 	}
 	$transaction_code=$transaction_id;
 	$cash_code=$cash_transfer;
-
+	
+	echo "<script language='javascript'>";
+	echo "window.opener.location.reload();";
+	echo "</script>";
+	
+	
+	
 }
 
 ?>
@@ -295,12 +295,12 @@ function calculateTotal(){
 
 	var rev=document.getElementById('revolving_remittance').value;
 	if(rev>0){
-		document.getElementById('for_deposit').value=Math.round((document.getElementById('cash_total').value*1-rev*1)*100)/100;
+		document.getElementById('sjt_net_revenue').value=Math.round((document.getElementById('cash_total').value*1-rev*1)*100)/100;
 		
 	}
 	else {
 		document.getElementById('revolving_remittance').value=document.getElementById('cash_total').value;	
-		document.getElementById('for_deposit').value=0;
+		document.getElementById('sjt_net_revenue').value=0;
 	
 	}
 	
@@ -309,7 +309,7 @@ function calculateTotal(){
 function submitForm(){
 
 	document.forms['cash_form'].submit();
-	window.opener.location.reload();
+	//window.opener.location.reload();
 }
 
 function openTicketSeller(){
@@ -319,13 +319,13 @@ function openTicketSeller(){
 
 function calculateDistribution(type){
 	if(type=='revenue'){
-		var revolving=document.getElementById('cash_total').value*1-document.getElementById('for_deposit').value*1;
+		var revolving=document.getElementById('cash_total').value*1-document.getElementById('sjt_net_revenue').value*1;
 		document.getElementById('revolving_remittance').value=Math.round(revolving*100)/100;
 	
 	}
 	else if(type=='revolving'){
 		var deposit=document.getElementById('cash_total').value*1-document.getElementById('revolving_remittance').value*1;
-		document.getElementById('for_deposit').value=Math.round(deposit*100)/100;
+		document.getElementById('sjt_net_revenue').value=Math.round(deposit*100)/100;
 	
 	}
 
@@ -396,6 +396,7 @@ function updateLogbook(){
 <?php
 if(isset($_GET['tID'])){
 	$db=retrieveDb();
+
 	$form_action="edit";
 	$sql="select * from transaction where id='".$_GET['tID']."'";
 //	echo $sql;
@@ -413,10 +414,9 @@ if(isset($_GET['tID'])){
 	
 	$reference_id=$row2['reference_id'];
 	$cash_transfer_id=$row2['id'];
-	$totalpost=$row2['total']+$row2['sjt_net_revenue']+$row2['svc_net_revenue'];
+	$totalpost=$row2['total']+$row2['sjt_net_revenue'];
 	$revolvingpost=$row2['total'];
-	$sjt_net_revenue=$row2['sjt_net_revenue'];
-	$svc_net_revenue=$row2['svc_net_revenue'];
+	$depositpost=$row2['sjt_net_revenue'];
 	$totalWordpost=$row2['total_in_words'];
 	$ticketsellerpost=$row2['ticket_seller'];
 	$transactDate=$row2['time'];
@@ -448,6 +448,7 @@ else {
 if(isset($_GET['cID'])){
 	$control_id=$_GET['cID'];
 	$db=retrieveDb();
+
 	$sql="select * from control_slip where id='".$control_id."'";
 	
 	$rs=$db->query($sql);
@@ -505,6 +506,7 @@ if(isset($_GET['tID'])){
 <select name='cash_assistant'>
 <?php
 $db=retrieveDb();
+
 $sql="select * from login where status='active' order by lastName";
 $rs=$db->query($sql);
 $nm=$rs->num_rows;
@@ -848,9 +850,8 @@ for($i=0;$i<=59;$i++){
 <td  class='subheader'>Total In Words</td><td class='category' colspan=2><textarea cols=40 name='total_in_pesos' id='total_in_pesos'  ><?php echo $totalWordpost; ?></textarea></td>
 
 </tr>
-<tr><td  class='subheader'>Revolving Fund (Remittance)</td><td class='grid' colspan=2><input style='text-align:right'  type=text id='revolving_remittance' name='revolving_remittance' value='<?php echo $revolvingpost; ?>'   /></td></tr>
-<tr><td class='subheader'>For Deposit/Net Revenue (SJT)</td><td class='category' colspan=2><input style='text-align:right'  type=text name='sjt_net_revenue' id='sjt_net_revenue' value='<?php echo $sjt_net_revenue; ?>' /></td></tr>
-<tr><td class='subheader'>For Deposit/Net Revenue (SVC)</td><td class='category' colspan=2><input style='text-align:right'  type=text name='svc_net_revenue' id='svc_net_revenue' value='<?php echo $svc_net_revenue; ?>' /></td></tr>
+<tr><td  class='subheader'>Revolving Fund (Remittance)</td><td class='grid' colspan=2><input style='text-align:right'  type=text id='revolving_remittance' name='revolving_remittance' value='<?php echo $revolvingpost; ?>' onkeyup='calculateDistribution("revolving")' onblur='calculateDistribution("revolving")' /></td></tr>
+<tr><td class='subheader'>For Deposit/Net Revenue</td><td class='category' colspan=2><input style='text-align:right'  type=text name='sjt_net_revenue' id='sjt_net_revenue' value='<?php echo $depositpost; ?>' onkeyup='calculateDistribution("revenue")' onblur='calculateDistribution("revenue")' /></td></tr>
 
 
 

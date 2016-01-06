@@ -119,23 +119,20 @@ if($extAvNM>0){
 <th rowspan=2>Name of CA</th>
 <th rowspan=2>Name of Ticket Seller</th>
 <th rowspan=2>Id No.</th>
-
-
-<th colspan=4>Remitted Ticket (Loose)</th>
-
-<th colspan=4>Over (Lacking)</th>
-<th colspan=4>Defective Ticket</th>
+<!--
+<th colspan=4>Remitted (Loose)</th>
+-->
+<th colspan=2>Over (Lacking)</th>
+<th colspan=2>Defective Ticket</th>
 <th rowspan=2>&nbsp;</th>
 </tr>
 <tr class='subheader'>
 
 
 <?php
-for($a=0;$a<3;$a++){
+for($a=0;$a<2;$a++){
 ?>
 	<th>SJ</th>
-	<th>DSJ</th>
-	<th>DSV</th>
 	<th>SV</th>
 
 <?php
@@ -439,21 +436,19 @@ for($k=0;$k<$nm2;$k++){
 ?>
 		<td><?php echo $ticket_seller; if($unit=="A/D"){ } else { echo " - ".$unit; }  ?></td>
 		<td><?php echo $ticket_id; ?></td>	
-
+<?php
+/*
 
 		<td align=right><?php echo $sjtLoose; ?></td>
 		<td align=right><?php echo $sjdLoose; ?></td>
 		<td align=right><?php echo $svdLoose; ?></td>
 		<td align=right><?php echo $svtLoose; ?></td>		
-
+*/
+?>		
 		<td align=right><?php echo $sjt_label; ?></td>
-		<td align=right><?php echo $sjd_label; ?></td>
-		<td align=right><?php echo $svd_label; ?></td>
 		<td align=right><?php echo $svt_label; ?></td>
 
 		<td align=right><?php echo $sjtDefective; ?></td>
-		<td align=right><?php echo $sjdDefective; ?></td>
-		<td align=right><?php echo $svdDefective; ?></td>
 		<td align=right><?php echo $svtDefective; ?></td>		
 		<td><a href='#' onclick="deleteRow('<?php echo $remit_id; ?>','<?php echo $_GET['ext']; ?>')">X</a></td>		
 	</tr>
@@ -508,21 +503,20 @@ if($nm2>0){
 ?>
 <tr class='subheader'>
 <th  colspan=3>Subtotal</th>
-
+<?php
+/*
 
 	<td align=right><font><?php echo $subtotal['sjtLoose']; ?></font></td> 
 	<td align=right><font><?php echo $subtotal['sjdLoose']; ?></font></td> 
 	<td align=right><font><?php echo $subtotal['svdLoose']; ?></font></td> 
 	<td align=right><font><?php echo $subtotal['svtLoose']; ?></font></td> 
-			
+
+*/
+?>			
 	<td align=right><font><?php echo $subtotal['sjt_label']; ?></font></td> 
-	<td align=right><font><?php echo $subtotal['sjd_label']; ?></font></td> 
-	<td align=right><font><?php echo $subtotal['svd_label']; ?></font></td> 
 	<td align=right><font><?php echo $subtotal['svt_label']; ?></font></td> 
 
 	<td align=right><font><?php echo $subtotal['sjtDefective']; ?></font></td> 
-	<td align=right><font><?php echo $subtotal['sjdDefective']; ?></font></td> 
-	<td align=right><font><?php echo $subtotal['svdDefective']; ?></font></td> 
 	<td align=right><font><?php echo $subtotal['svtDefective']; ?></font></td> 
 	<td>&nbsp;</td>
 	
@@ -566,20 +560,18 @@ if($nm2>0){
 <tr class='header'>
 <th colspan=3>Grand Total</th>
 
-
+<?php
+/*
 	<td align=right><font><?php echo $grandtotal['sjtLoose']; ?></font></td> 
 	<td align=right><font><?php echo $grandtotal['sjdLoose']; ?></font></td> 
 	<td align=right><font><?php echo $grandtotal['svdLoose']; ?></font></td> 
 	<td align=right><font><?php echo $grandtotal['svtLoose']; ?></font></td> 
-			
+*/
+?>			
 	<td align=right><font><?php echo $grandtotal['sjt_label']; ?></font></td> 
-	<td align=right><font><?php echo $grandtotal['sjd_label']; ?></font></td> 
-	<td align=right><font><?php echo $grandtotal['svd_label']; ?></font></td> 
 	<td align=right><font><?php echo $grandtotal['svt_label']; ?></font></td> 
 
 	<td align=right><font><?php echo $grandtotal['sjtDefective']; ?></font></td> 
-	<td align=right><font><?php echo $grandtotal['sjdDefective']; ?></font></td> 
-	<td align=right><font><?php echo $grandtotal['svdDefective']; ?></font></td> 
 	<td align=right><font><?php echo $grandtotal['svtDefective']; ?></font></td> 
 	<td>&nbsp;</td>	
 	
